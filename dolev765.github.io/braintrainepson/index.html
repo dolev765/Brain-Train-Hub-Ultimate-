@@ -1,0 +1,345 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Adaptive Posner Task</title>
+    
+    <!-- Fonts -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;700&display=swap" rel="stylesheet">
+    
+    <!-- Stylesheets -->
+    <link rel="stylesheet" href="css/main.css">
+    <link rel="stylesheet" href="css/components.css">
+    <link rel="stylesheet" href="css/responsive.css">
+</head>
+<body>
+    <div id="mainContent">
+        <header>
+            <h1>ADAPTIVE POSNER TASK</h1>
+        </header>
+        
+        <!-- Settings and Logs Buttons -->
+        <div class="top-controls">
+            <button id="logsToggle" class="control-icon-btn">📊</button>
+            <button id="settingsToggle" class="settings-icon-btn">⚙️</button>
+        </div>
+        <div id="settingsPanel" class="settings-panel hidden">
+            <h3>Advanced Settings</h3>
+            <div class="settings-group">
+                <label><input type="checkbox" id="tier2Toggle"> Common Knowledge Categories</label>
+                <label><input type="checkbox" id="tier3Toggle"> Expert Knowledge Categories</label>
+            </div>
+        </div>
+        
+        <!-- Description Screen -->
+        <div id="descriptionScreen" class="screen active">
+            <div class="description-content">
+                <div class="task-description">
+                    <h2>About This Task</h2>
+                    <p>
+                        This task trains your semantic long-term memory retrieval. You'll be presented with number pairs in various formats:
+                    </p>
+                    <ul>
+                        <li>Arabic numerals vs. written number words (7 vs. "seven")</li>
+                        <li>Arabic numerals vs. Roman numerals (4 vs. IV)</li>
+                        <li>Spelled numbers vs. Roman numerals ("six" vs. VI)</li>
+                    </ul>
+                    
+                    <h3>Trial Sequence</h3>
+                    <ol>
+                        <li>A rule is presented (you must press the spacebar to continue)</li>
+                        <li>A fixation cross appears for 500ms</li>
+                        <li>A number pair appears (respond while it's visible)</li>
+                        <li>The next trial begins with a new rule</li>
+                    </ol>
+                    
+                    <h3>Rules</h3>
+                    <div class="rule-explanation">
+                        <h4>1. Physical Property Rule:</h4>
+                        <p>Judge whether the items share the same physical format.</p>
+                        <ul>
+                            <li>Press "J" if both items have the same format (e.g., 7-9 are both Arabic numerals)</li>
+                            <li>Press "F" if items have different formats (e.g., 7-"seven" are different formats)</li>
+                        </ul>
+                    </div>
+                    
+                    <div class="rule-explanation">
+                        <h4>2. Meaning Rule:</h4>
+                        <p>Judge whether the items share the same meaning.</p>
+                        <ul>
+                            <li>Press "J" if both items represent the same number (e.g., 4-IV both mean four)</li>
+                            <li>Press "F" if items represent different numbers (e.g., 4-V mean four and five)</li>
+                        </ul>
+                    </div>
+                    
+                    <h3>Training Structure</h3>
+                    <ul>
+                        <li>Each session consists of 32 trials</li>
+                        <li>Rules may change on each trial - you must pay attention to the rule</li>
+                        <li>The task difficulty adapts based on your performance</li>
+                    </ul>
+                </div>
+                
+                <div class="session-info">
+                    <h3>Training Progress</h3>
+                    <p>Current difficulty level: <span id="lastCompletedLevel">1</span></p>
+                    <button id="resetLevel" class="btn btn-secondary">Reset Difficulty Level</button>
+                </div>
+                
+                <div class="mode-selector">
+                    <h3>Select Mode</h3>
+                    <div class="mode-buttons">
+                        <button id="progressiveMode" class="mode-button">Classic Mode</button>
+                        <button id="comprehensiveMode" class="mode-button active">Multi Mode</button>
+                        <button id="manualMode" class="mode-button">Manual Mode</button>
+                    </div>
+                </div>
+                
+                <div id="modeDescription" class="mode-description">
+                    <strong>Multi Mode:</strong> Includes numbers and semantic relationships. Progressive difficulty.
+                </div>
+
+                <div class="settings">
+                    <label for="numberRangeSelect">Number range:</label>
+                    <select id="numberRangeSelect">
+                        <option value="10" selected>1–10</option>
+                        <option value="20">1–20</option>
+                    </select>
+                </div>
+                
+                <div class="display-settings">
+                    <h3>Display Settings</h3>
+                    <label class="checkbox-label">
+                        <input type="checkbox" id="showErrorCounts" checked>
+                        Show error counts during training
+                    </label>
+                </div>
+                
+                <div id="manualModeControls" class="manual-controls" style="display:none;">
+                    <h3>Select difficulty level to practice:</h3>
+                    <div class="level-selector">
+                        <button class="level-button active" data-level="1">1</button>
+                        <button class="level-button" data-level="2">2</button>
+                        <button class="level-button" data-level="3">3</button>
+                        <button class="level-button" data-level="4">4</button>
+                        <button class="level-button" data-level="5">5</button>
+                        <button class="level-button" data-level="6">6</button>
+                        <button class="level-button" data-level="7">7</button>
+                        <button class="level-button" data-level="8">8</button>
+                        <button class="level-button" data-level="9">9</button>
+                        <button class="level-button" data-level="10">10</button>
+                    </div>
+                    <p>Number of trials: <span id="trialsCount">32</span></p>
+                </div>
+                
+                <div class="action-buttons">
+                    <button id="startTask" class="btn btn-primary">
+                        <span>Start Training</span>
+                        <svg width="16" height="16" viewBox="0 0 256 256">
+                            <path d="M184.49,136.49l-80,80a12,12,0,0,1-17-17L159,128L87.51,56.49a12,12,0,1,1,17-17l80,80A12,12,0,0,1,184.49,136.49Z"></path>
+                        </svg>
+                    </button>
+                    <button id="viewProgress" class="btn btn-secondary">View Progress</button>
+                </div>
+            </div>
+        </div>
+        
+        <!-- Rule Screen -->
+        <div id="ruleScreen" class="screen game-screen">
+            <div class="game-header">
+                <span>Difficulty level: <span id="currentLevel">1</span></span>
+                <span>Trial: <span id="currentTrial">1</span> / 32</span>
+            </div>
+            <div id="errorCountsDisplayRule" class="error-counts">
+                <div>Errors: <span id="currentErrorsRule">0</span>/3</div>
+                <div>Consecutive failures: <span id="currentConsecutiveFailuresRule">0</span>/3</div>
+            </div>
+            
+            <div class="rule-content-box">
+                <div id="currentRuleDisplay" class="rule-title">Physical Property Rule</div>
+                <div id="ruleInstructions" class="rule-instructions">
+                    Press "J" if items have the same format, press "F" if they have different formats.
+                </div>
+                <button id="continueButton" class="btn btn-primary continue-btn">
+                    Press SPACEBAR to continue
+                </button>
+            </div>
+            
+            <div class="back-button-container">
+                <button id="backToHomeFromRule" class="btn btn-secondary">← Back to Home</button>
+            </div>
+        </div>
+        
+        <!-- Fixation Screen -->
+        <div id="fixationScreen" class="screen game-screen">
+            <div class="game-header">
+                <span>Difficulty level: <span id="currentLevelFixation">1</span></span>
+                <span>Trial: <span id="currentTrialFixation">1</span> / 32</span>
+            </div>
+            <div id="errorCountsDisplayFixation" class="error-counts">
+                <div>Errors: <span id="currentErrorsFixation">0</span>/3</div>
+                <div>Consecutive failures: <span id="currentConsecutiveFailuresFixation">0</span>/3</div>
+            </div>
+            
+            <div class="content-box">
+                <div class="fixation-cross">+</div>
+            </div>
+            
+            <div class="back-button-container">
+                <button id="backToHomeFromFixation" class="btn btn-secondary">← Back to Home</button>
+            </div>
+        </div>
+        
+        <!-- Task Screen -->
+        <div id="taskScreen" class="screen game-screen">
+            <div class="game-header">
+                <span>Difficulty level: <span id="currentLevel2">1</span></span>
+                <span>Trial: <span id="currentTrialDisplay">1</span> / 32</span>
+            </div>
+            
+            <div id="errorCountsDisplay" class="error-counts">
+                <div>Errors: <span id="currentErrors">0</span>/3</div>
+                <div>Consecutive failures: <span id="currentConsecutiveFailures">0</span>/3</div>
+            </div>
+            
+            <div class="content-box">
+                <div class="stimulus" id="stimulusPair">7-9</div>
+            </div>
+            
+            <div class="feedback-container">
+                <div id="feedbackMessage" class="feedback-message"></div>
+            </div>
+            <div id="progressBar2" class="progress-bar">
+                <div id="progressFill2" class="progress-fill"></div>
+            </div>
+            
+            <div class="response-buttons">
+                <button id="differentButton" class="btn btn-secondary">Different (F)</button>
+                <button id="sameButton" class="btn btn-primary">Same (J)</button>
+            </div>
+            
+            <div class="back-button-container">
+                <button id="backToHomeFromTask" class="btn btn-secondary">← Back to Home</button>
+            </div>
+        </div>
+        
+        <!-- Session Complete Screen -->
+        <div id="sessionCompleteScreen" class="screen">
+            <div class="screen-header">
+                <h2>TRAINING SESSION COMPLETED</h2>
+            </div>
+            
+            <div class="results-box">
+                <h3>Results:</h3>
+                <p>Correct answers: <span id="sessionCorrectCount">0</span> / 32</p>
+                <p>Accuracy: <span id="sessionAccuracy">0%</span></p>
+                <p>Final level: <span id="sessionFinalLevel">1</span></p>
+            </div>
+            
+            <div class="action-buttons">
+                <button id="returnToMenu" class="btn btn-secondary">Return to Menu</button>
+                <button id="startNewSession" class="btn btn-primary">
+                    <span>New Session</span>
+                    <svg width="16" height="16" viewBox="0 0 256 256">
+                        <path d="M184.49,136.49l-80,80a12,12,0,0,1-17-17L159,128L87.51,56.49a12,12,0,1,1,17-17l80,80A12,12,0,0,1,184.49,136.49Z"></path>
+                    </svg>
+                </button>
+            </div>
+        </div>
+        
+        <!-- Score Screen -->
+        <div id="scoreScreen" class="screen">
+            <div class="screen-header">
+                <h2>TRAINING COMPLETE</h2>
+                <button id="startNewTest" class="btn btn-primary">Return to Menu</button>
+            </div>
+            
+            <div id="statsContainer" class="stats-container">
+                <div class="stat-box">
+                    <h4>SESSION SUMMARY</h4>
+                    <p>Trials completed: <span>32</span></p>
+                </div>
+                
+                <div class="stat-box">
+                    <h4>ACCURACY</h4>
+                    <p id="accuracyRate" class="stat-value">0%</p>
+                </div>
+                
+                <div class="stat-box">
+                    <h4>FINAL LEVEL</h4>
+                    <p id="finalLevel" class="stat-value">0</p>
+                </div>
+            </div>
+            
+            <div class="history-section">
+                <h3>HISTORY</h3>
+                <div id="historyContainer" class="history-container"></div>
+            </div>
+        </div>
+
+        <!-- Progress Screen -->
+        <div id="progressScreen" class="screen">
+            <div class="screen-header">
+                <h2>PROGRESS OVER TIME</h2>
+                <div class="progress-controls">
+                    <button id="progressBackToMenu" class="btn btn-secondary">Back to Menu</button>
+                    <select id="progressModeFilter">
+                        <option value="all" selected>All Modes</option>
+                        <option value="classic">Classic</option>
+                        <option value="multi">Multi</option>
+                    </select>
+                </div>
+            </div>
+            <div class="chart-container">
+                <canvas id="progressCanvas" width="700" height="300"></canvas>
+                <div class="chart-legend">
+                    <div class="legend-item">
+                        <span class="legend-color" style="background:#cc2929;"></span>
+                        <span>Final level (last session per day)</span>
+                    </div>
+                    <div class="legend-item">
+                        <span class="legend-color" style="background:#2d7a2d;"></span>
+                        <span>Highest level (max per day)</span>
+                    </div>
+                    <div class="legend-item">
+                        <span class="legend-color" style="background:#1f4f8a;"></span>
+                        <span>Lowest level (min per day)</span>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <!-- Question-Answer Log Modal -->
+    <div id="questionAnswerLog" class="log-modal hidden">
+        <div class="log-modal-content">
+            <div class="log-header">
+                <h3>Question-Answer Log</h3>
+                <div class="log-controls">
+                    <button id="exportLog" class="export-log-btn">Export</button>
+                    <button id="closeLog" class="close-log-btn">✕</button>
+                </div>
+            </div>
+            <div id="logContent" class="log-content">
+                <div class="log-entry log-header-row">
+                    <div class="log-trial">Trial</div>
+                    <div class="log-pair">Pair</div>
+                    <div class="log-rule">Rule</div>
+                    <div class="log-response">Response</div>
+                    <div class="log-correct">Correct</div>
+                    <div class="log-time">Time</div>
+                </div>
+                <div id="logEntries" class="log-entries">
+                    <!-- Log entries will be added here dynamically -->
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <!-- Scripts -->
+    <script type="module" src="js/main.js"></script>
+</body>
+</html>

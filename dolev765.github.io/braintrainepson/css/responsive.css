@@ -1,0 +1,350 @@
+/* Responsive CSS - Mobile and tablet optimizations */
+
+/* Mobile First Approach */
+@media (max-width: 768px) {
+    #mainContent {
+        padding: 15px;
+    }
+    
+    header h1 {
+        font-size: 1.5rem;
+        margin-bottom: 1.5rem;
+    }
+    
+    .screen {
+        gap: 1.5rem;
+    }
+    
+    .description-content {
+        gap: 1.5rem;
+    }
+    
+    .task-description {
+        max-width: 100%;
+    }
+    
+    .rule-explanation {
+        padding: 0.75rem;
+    }
+    
+    .content-box {
+        padding: 1.5rem;
+        min-height: 100px;
+    }
+    
+    .rule-content-box {
+        padding: 1.5rem;
+    }
+    
+    .rule-title {
+        font-size: 1.5rem;
+    }
+    
+    .rule-instructions {
+        font-size: 0.9rem;
+    }
+    
+    .fixation-cross {
+        font-size: 2rem;
+    }
+    
+    .stimulus {
+        font-size: 1.25rem;
+    }
+    
+    .game-header {
+        flex-direction: column;
+        gap: 0.5rem;
+        text-align: center;
+    }
+    
+    .error-counts {
+        flex-direction: column;
+        gap: 0.25rem;
+        text-align: center;
+    }
+    
+    .stats-container {
+        grid-template-columns: 1fr;
+        gap: 0.75rem;
+    }
+    
+    .chart-container {
+        padding: 1rem;
+    }
+    
+    .chart-legend {
+        flex-direction: column;
+        gap: 10px;
+        align-items: flex-start;
+    }
+    
+    .progress-controls {
+        flex-direction: column;
+        align-items: stretch;
+        gap: 0.5rem;
+    }
+    
+    .screen-header {
+        flex-direction: column;
+        align-items: stretch;
+        text-align: center;
+    }
+    
+    .history-item {
+        flex-direction: column;
+        align-items: flex-start;
+        gap: 0.5rem;
+    }
+    
+    .history-item .history-content {
+        width: 100%;
+    }
+}
+
+@media (max-width: 480px) {
+    #mainContent {
+        padding: 10px;
+    }
+    
+    header h1 {
+        font-size: 1.25rem;
+        margin-bottom: 1rem;
+    }
+    
+    .screen {
+        gap: 1rem;
+    }
+    
+    .description-content {
+        gap: 1rem;
+    }
+    
+    .content-box {
+        padding: 1rem;
+        min-height: 80px;
+    }
+    
+    .rule-content-box {
+        padding: 1rem;
+    }
+    
+    .rule-title {
+        font-size: 1.25rem;
+    }
+    
+    .rule-instructions {
+        font-size: 0.85rem;
+    }
+    
+    .fixation-cross {
+        font-size: 1.75rem;
+    }
+    
+    .stimulus {
+        font-size: 1.1rem;
+    }
+    
+    .session-info,
+    .display-settings,
+    .results-box {
+        padding: 0.75rem;
+    }
+    
+    .stat-box {
+        padding: 0.75rem;
+    }
+    
+    .stat-value {
+        font-size: 1.25rem;
+    }
+    
+    .chart-container {
+        padding: 0.75rem;
+    }
+    
+    .history-container {
+        max-height: 250px;
+        padding: 0.75rem;
+    }
+    
+    .history-item {
+        padding: 0.5rem;
+    }
+    
+    .history-item .trial-details {
+        font-size: 0.8rem;
+    }
+}
+
+/* Tablet Optimizations */
+@media (min-width: 769px) and (max-width: 1024px) {
+    #mainContent {
+        padding: 20px;
+    }
+    
+    .stats-container {
+        grid-template-columns: repeat(2, 1fr);
+    }
+    
+    .chart-legend {
+        gap: 15px;
+    }
+}
+
+/* Large Screen Optimizations */
+@media (min-width: 1025px) {
+    #mainContent {
+        padding: 30px;
+    }
+    
+    .task-description {
+        max-width: 700px;
+    }
+    
+    .stats-container {
+        grid-template-columns: repeat(3, 1fr);
+    }
+    
+    .chart-container {
+        padding: 2rem;
+    }
+}
+
+/* Landscape Mobile */
+@media (max-width: 768px) and (orientation: landscape) {
+    .screen {
+        gap: 1rem;
+    }
+    
+    .content-box {
+        min-height: 60px;
+        padding: 1rem;
+    }
+    
+    .rule-content-box {
+        padding: 1rem;
+    }
+    
+    .game-header {
+        flex-direction: row;
+        text-align: left;
+    }
+    
+    .error-counts {
+        flex-direction: row;
+        text-align: left;
+    }
+}
+
+/* High DPI Displays */
+@media (-webkit-min-device-pixel-ratio: 2), (min-resolution: 192dpi) {
+    .btn {
+        border-width: 0.5px;
+    }
+    
+    .mode-button,
+    .level-button {
+        border-width: 1px;
+    }
+}
+
+/* Print Styles */
+@media print {
+    body {
+        background-color: white;
+        color: black;
+    }
+    
+    .btn,
+    .mode-button,
+    .level-button {
+        display: none;
+    }
+    
+    .screen {
+        display: block !important;
+    }
+    
+    .game-screen {
+        display: none !important;
+    }
+    
+    .content-box,
+    .rule-content-box {
+        border: 1px solid #ccc;
+        background-color: white;
+    }
+}
+
+/* Accessibility Improvements */
+@media (prefers-reduced-motion: reduce) {
+    .btn,
+    .mode-button,
+    .level-button {
+        transition: none;
+    }
+    
+    .progress-fill {
+        transition: none;
+    }
+    
+    .btn.loading::after {
+        animation: none;
+    }
+}
+
+/* Dark Mode Support */
+@media (prefers-color-scheme: dark) {
+    body {
+        background-color: #2d2d2d;
+        color: #e0e0e0;
+    }
+    
+    .content-box,
+    .rule-content-box,
+    .session-info,
+    .display-settings,
+    .results-box,
+    .stat-box,
+    .history-container {
+        background-color: #3d3d3d;
+    }
+    
+    .rule-explanation {
+        background-color: #4d4d4d;
+    }
+    
+    .btn-secondary {
+        border-color: #666;
+        color: #e0e0e0;
+    }
+    
+    .btn-secondary:hover:not(:disabled) {
+        background-color: #4d4d4d;
+        border-color: #cc2929;
+    }
+    
+    .mode-button,
+    .level-button {
+        border-color: #666;
+        color: #e0e0e0;
+    }
+    
+    .mode-button:hover,
+    .level-button:hover {
+        background-color: #4d4d4d;
+        border-color: #cc2929;
+    }
+    
+    select {
+        background-color: #4d4d4d;
+        border-color: #666;
+        color: #e0e0e0;
+    }
+    
+    .history-item {
+        background-color: #4d4d4d;
+    }
+}
+

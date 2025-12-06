@@ -1,0 +1,2261 @@
+<!DOCTYPE html> 
+<html lang="en">
+<head>
+  <link rel="icon" href="icon/favicon.ico" />
+  <link rel="icon" type="image/png" sizes="32x32" href="icon/favicon-32x32.png">
+  <link rel="icon" type="image/png" sizes="16x16" href="icon/favicon-16x16.png">
+  <link rel="apple-touch-icon" sizes="180x180" href="icon/apple-touch-icon.png">
+  <link rel="manifest" href="manifest.json">
+  <meta name="apple-mobile-web-app-title" content="3D-MOT" />
+  <meta charset="UTF-8" name="viewport" content="width=device-width, user-scalable=no, minimum-scale=1.0, maximum-scale=1.0">
+  <title>Just 3D MOT</title>
+  <style>
+    :root {
+      --step--2: clamp(0.7813rem, 0.6829rem + 0.3575vw, 0.96rem);
+      --step--1: clamp(0.9375rem, 0.7931rem + 0.525vw, 1.2rem);
+      --step-0: clamp(1.125rem, 0.9188rem + 0.75vw, 1.5rem);
+      --step-1: clamp(1.35rem, 1.0613rem + 1.05vw, 1.875rem);
+      --step-2: clamp(1.62rem, 1.2219rem + 1.4475vw, 2.3438rem);
+      --step-3: clamp(1.944rem, 1.4019rem + 1.9714vw, 2.9297rem);
+      --step-4: clamp(2.3328rem, 1.6017rem + 2.6586vw, 3.6621rem);
+      --step-5: clamp(2.7994rem, 1.8213rem + 3.5566vw, 4.5776rem);
+    }
+  
+    body { margin: 0; overflow: hidden; }
+    #gui-container { position: absolute; top: 4px; right: 4px; z-index: 1; }
+    #message {
+      position: absolute;
+      top: 1svh;
+      left: 1svw;
+      color: rgba(255, 255, 255, 0.7);
+      font-size: var(--step-4);
+      font-family: Arial, sans-serif;
+      text-shadow: 1px 1px 2px black;
+    }
+    #instructions {
+      position: absolute;
+      bottom: 1svh;
+      right: 1svw;
+      color: white;
+      font-size: var(--step--2);
+      font-family: Arial, sans-serif;
+      text-shadow: 1px 1px 2px black;
+    }
+    #average-display {
+      position: absolute;
+      bottom: 1svh;
+      left: 1svw;
+      color: white;
+      font-size: var(--step-0);
+      font-family: Arial, sans-serif;
+      text-shadow: 1px 1px 2px black;
+      display: flex;
+      align-items: center;
+    }
+
+    #message.hidden,
+    #average-display.hidden,
+    #instructions.hidden,
+    #message.hidden-text,
+    #average-display.hidden-text span,
+    #instructions.hidden-text span {
+      display: none;
+    }
+
+    #average-display button, #show-info-button {
+      margin-left: 10px;
+      background-color: #007bff;
+      color: white;
+      font-size: var(--step--2);
+      border: none;
+      padding: 5px 10px;
+      cursor: pointer;
+    }
+    #graph-popup {
+      display: none; /* Hidden by default */
+      position: fixed;
+      top: 15%;
+      left: 15%;
+      width: 70%;
+      height: 70%;
+      background-color: rgba(0, 0, 0, 0.8);
+      z-index: 2;
+    }
+    #graph-container {
+      position: relative;
+      width: 100%;
+      height: 100%;
+    }
+    #progress-chart {
+      width: 100%;
+      height: 100%;
+    }
+    #close-graph-button {
+      position: absolute;
+      top: 5px; 
+      left: 5px;
+      background-color: #ff0000;
+      color: white;
+      font-size: var(--step-0);
+      border: none;
+      padding: 5px 10px;
+      cursor: pointer;
+      opacity: 0.5;
+    }
+
+    a {
+        color: #55B7F3;
+        text-decoration: none;
+        font-weight: bold;
+    }
+
+    a:active {
+        color: #59CDFF;
+    }
+
+    #center-dot {
+      position: absolute;
+      left: 50%;
+      top: 50%;
+      transform: translate(-50%, -50%);
+      background-color: red;
+      border-radius: 50%;
+      pointer-events: none;
+    }
+
+    #center-dot.blink {
+      animation: fadeInOut 2s infinite;
+    }
+
+    #center-dot.anaglyph {
+      border-radius: 50%;
+      pointer-events: none;
+    }
+
+    #center-dot.anaglyph::before,
+    #center-dot.anaglyph::after {
+      content: "";
+      position: absolute;
+      width: 100%;
+      height: 100%;
+      border-radius: 50%;
+    }
+
+    #center-dot.anaglyph::before {
+      background-color: red;
+      transform: translateX(-15%); /* Shift for left eye */
+      mix-blend-mode: screen;
+    }
+
+    #center-dot.anaglyph::after {
+      background-color: cyan;
+      transform: translateX(15%); /* Shift for right eye */
+      mix-blend-mode: screen;
+    }
+
+    @keyframes fadeInOut {
+      0%, 100% {
+        opacity: 0.3;
+      }
+      50% {
+        opacity: 1;
+      }
+    }
+
+    .dg.main {
+      background: rgba(40, 40, 40, 0.8);
+    }
+    .disabled {
+      pointer-events: none;
+      opacity: 0.5;
+    }
+
+    .dg #big-button {
+      height: 36px;
+    }
+
+    .dg #big-button .property-name {
+      white-space: nowrap;
+      width: 100%;
+      font-size: 20px;
+      padding: 6px;
+    }
+
+    .dg.main {
+      max-height: 88svh;
+      overflow-y: auto;
+    }
+
+    .dg.main .close-button.close-bottom {
+      bottom: -20px;
+    }
+
+    .dat-popup {
+      position: fixed;
+      top: 50%;
+      left: 50%;
+      transform: translate(-50%, -50%);
+      background: #2c2f33;
+      color: #fff;
+      padding: 20px;
+      border-radius: 5px;
+      border: 1px solid #555;
+      box-shadow: 0px 0px 10px rgba(0, 0, 0, 0.5);
+      display: none;
+      min-width: 300px;
+      max-width: min(90vw, 700px);
+      max-height: 90svh;
+      overflow: auto;
+      z-index: 1000;
+      font-family: sans-serif;
+    }
+
+    .dat-popup-header {
+        font-size: var(--step-2);
+        font-weight: bold;
+        margin-bottom: 10px;
+    }
+
+    .dat-popup-sub-header {
+      font-size: var(--step-1);
+    }
+
+    .dat-popup-content {
+        font-size: var(--step-0);
+    }
+
+    .dat-popup-close {
+        background: #ff5555;
+        color: #fff;
+        border: none;
+        padding: 5px 10px;
+        cursor: pointer;
+        margin-top: 10px;
+        font-size: 12px;
+        display: block;
+        width: 100%;
+        text-align: center;
+        border-radius: 3px;
+    }
+
+    .dat-popup-close:hover {
+        background: #ff7777;
+    }
+
+    @media (max-height: 550px) {
+      #average-display {
+        font-size: var(--step--1);
+      }
+      #message {
+        font-size: var(--step-2);
+      }
+    }
+  </style>
+</head>
+<body>
+  <div id="game-container">
+    <div id="message"></div>
+    <div id="center-dot"></div>
+ 
+  </div>
+  <div id="gui-container"></div>
+  <div id="instructions">
+    <span>Scroll = Zoom, Left Mouse Drag = Rotate, Right Mouse Drag = Move, R = Restart Game</span>
+    <button id="show-info-button" onclick="openInfoPopup()">?</button>
+  </div>
+  <div id="average-display">
+    <span>Avg Accuracy: N/A%</span>
+    <button id="show-graph-button">Show Progress Graph</button>
+  </div>
+  <!-- Popup for Graph -->
+  <div id="graph-popup">
+    <div id="graph-container">
+      <canvas id="progress-chart"></canvas>
+      <button id="close-graph-button">X</button>
+    </div>
+  </div>
+  <div id="fps-popup" class="dat-popup">
+    <div class="dat-popup-header">Site Slow?</div>
+    <div class="dat-popup-content">
+      <p class="dat-popup-sub-header">1. Enable Hardware Acceleration in your browser</p>
+
+      <p>For Chrome:</p>
+      <ul>
+        <li>Click the three-dot menu (⋮) in the top-right corner.</li>
+        <li>Select <b>Settings</b></li>
+        <li>Search for "Use graphics acceleration when available"</li>
+        <li>Click to enable</li>
+      </ul>
+      <p>For Firefox:</p>
+      <ul>
+        <li>Click the hamburger menu (☰) in the top-right corner.</li>
+        <li>Select <b>Settings</b></li>
+        <li>Search for "performance settings"</li>
+        <li>Disable "Use recommended performance settings"</li>
+        <li>Force Enable "Use hardware acceleration when available"</li>
+      </ul>
+
+      <p class="dat-popup-sub-header">2. Use Low graphics option</p>
+      <p>
+        Open the "Ball/Box Appearance" menu to the right and change the graphics from "Default" to "Low".
+        You can also try "Potato".
+      </p>
+    </div>
+    <button class="dat-popup-close" onclick="closeFpsPopup()">Close</button>
+  </div>
+  <div id="info-popup" class="dat-popup">
+    <div class="dat-popup-header">3D MOT (3D Multiple Object Tracking)</div>
+    <div class="dat-popup-content">
+      <p>
+        3D MOT is an exercise where you track 4 balls in a 3D space
+        while they move and collide with other distractor balls.
+      </p>
+      <p>
+        Correctly identify all 4 after the balls stop moving, and game speed will increase.
+        Fail to identify any, and speed will decrease. Try to achieve as high of speed as possible.
+      </p>
+
+      <p class="dat-popup-sub-header">Cognitive Benefits</p>
+      <p>According to studies, 3D MOT improves working memory, processing speed, and executive function. It also increases your visuospatial intelligence.</p>
+      <p>
+         Studies have also shown that 3D MOT improves your reaction time in multiple sports and
+         that it reduces the negative cognitive effects of mental and physical fatigue. It improves your driving performance.
+         It improves your decision-making abilities. It also reduces attention deficits such as those seen in ADHD.
+      </p>
+      <ul style="display: flex; flex-direction: column; gap: 10px;">
+        <li><a target="_blank" href="https://www.researchgate.net/publication/270343534_Enhancing_Cognitive_Function_Using_Perceptual-Cognitive_Training">Enhancing Cognitive Function Using [3D MOT]</a></li>
+        <li><a target="_blank" href="https://www.researchgate.net/publication/337603512_3-Dimensional_Multiple_Object_Tracking_Training_Can_Enhance_Selective_Attention_Psychomotor_Speed_and_Cognitive_Flexibility_in_Healthy_Older_Adults">3D MOT Training Can Enhance Selective Attention, Psychomotor Speed, and Cognitive Flexibility in Healthy Older Adults</a></li>
+        <li><a target="_blank" href="https://www.researchgate.net/publication/339011764_Examining_the_roles_of_working_memory_and_visual_attention_in_multiple_object_tracking_expertise">Examining the roles of working memory and visual attention in MOT expertise</a></li>
+        <li><a target="_blank" href="https://sci-hub.ru/10.1037/mil0000125">3D MOT Boosts Working Memory Span: Implications for Cognitive Training in Military Populations</a></li>
+      </ul>
+    </div>
+    <button class="dat-popup-close" onclick="closeInfoPopup()">Close</button>
+  </div>
+  <script type="importmap">
+    {
+      "imports": {
+        "three": "https://cdn.jsdelivr.net/npm/three@v0.174.0/build/three.module.js",
+        "three/addons/": "https://cdn.jsdelivr.net/npm/three@v0.174.0/examples/jsm/"
+      }
+    }
+  </script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/dat-gui/0.7.7/dat.gui.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+  <script type="module">
+    import * as THREE from 'three';
+    import { OrbitControls } from 'three/addons/controls/OrbitControls.js';
+    import { FontLoader } from 'three/addons/loaders/FontLoader.js';
+    import { EXRLoader } from 'three/addons/loaders/EXRLoader.js';
+    import Stats from 'three/addons/libs/stats.module.js';
+    import { AnaglyphEffect } from './anaglyph.js';
+    import { Text } from 'https://cdn.jsdelivr.net/npm/troika-three-text@0.52.3/+esm'
+
+    const DEFAULT_BALL_COLOR = '#F4E2DD';
+    const YELLOW = '#FFFF00';
+    const RED = '#DD0022';
+    const ORANGE = '#E99B0B';
+    const GREEN = '#00ff22';
+    const INPUT_HOTKEYS = [
+      ['a', 'KeyA'],
+      ['s', 'KeyS'],
+      ['d', 'KeyD'],
+      ['f', 'KeyF'],
+      ['j', 'KeyJ'],
+      ['k', 'KeyK'],
+      ['l', "KeyL"],
+      ['h', "KeyH"],
+      ['g', "KeyG"],
+      [';', "Semicolon"],
+      ['v', "KeyV"],
+      ['m', "KeyM"],
+      ['b', "KeyB"],
+      ['n', "KeyN"],
+      ['c', "KeyC"],
+      [',', "Comma"],
+      ['z', "KeyZ"],
+      ['x', "KeyX"],
+      ['.', "Period"],
+    ];
+    const FRAME_ADJUSTMENT = 60 / 1000;
+    const sessionId = Date.now();
+    let scene, camera, renderer, controls, anaglyphEffect, then;
+    let ambientLight, directionalLight;
+    let stats;
+    let envMap;
+    let gui;
+    let balls = [];
+    let targetBalls = [];
+    let distractorBalls = [];
+    let coloredDistractorBalls = [];
+    let selectedBalls = [];
+    let targetSequence = [];
+    let userSequence = [];
+    let isSequenceShowing = false;
+    let isUserTurn = false;
+    let defaultSettings;
+    let settings;
+    let raycaster = new THREE.Raycaster();
+    let mouse = new THREE.Vector2();
+    let messageElement = document.getElementById('message');
+    let centerDotElement = document.getElementById('center-dot'); // Center Dot Element
+    let gameContainer = document.getElementById('game-container');
+    let screenRotationAngle = 0;
+    let loadedFont; // Global variable to store the loaded font
+    let activeTimeouts = []; // Array to store active timeouts
+    let correctAnswersCount = 0;
+    let incorrectAnswersCount = 0;
+    let isGameStarting = false; // Prevent multiple initializations
+    let mistakeMade = false; // Flag to track if a mistake has been made
+    let panAngle = 0.0;
+    let panAngleDx = 0.0;
+    let boundingBox;
+    let boundingBoxEdges;
+    let globalDivider;
+    let wallTexture1;
+    let wallNormal1;
+    let wallTexture2;
+    let wallNormal2;
+    let wallTexture3;
+    let wallNormal3;
+
+    // New variables for score tracking
+    let totalTrials = 0;
+    let trialScores = [];
+    let trialAccuracies = [];
+    let cumulativeScore = 0;
+    let cumulativeCorrectSelections = 0;
+    let cumulativeTotalTargets = 0;
+
+    let ballTexture;
+    let ballNormalTexture;
+    let ballTextureLow;
+    let ballLightmap;
+
+    const averageDisplayElement = document.getElementById('average-display');
+    const instructionsElement = document.getElementById('instructions');
+
+    // Graph elements
+    const showGraphButton = document.getElementById('show-graph-button');
+    const showInfoButton = document.getElementById('show-info-button');
+    const graphPopup = document.getElementById('graph-popup');
+    const closeGraphButton = document.getElementById('close-graph-button');
+
+    let vrButton;
+
+    let fpsInterval = null;
+    let fpsMultiplier = null;
+
+    init();
+    then = performance.now();
+    renderer.setAnimationLoop(animate);
+    updateGame();
+
+    function init() {
+      defaultSettings = {
+        level: 4,
+        autoProgression: true,
+        numBlueDistractors: 4,
+        numColoredDistractors: 0,
+        ballSpeed: 0.35,
+        ballOpacity: 0.94,
+        ballMetalness: 0.65,
+        ballRoughness: 0.30,
+        boxTexture: 'Gray',
+        ballRadius: 1.8,
+        fitToScreen: 'Auto',
+        boxX: 45,
+        boxY: 30,
+        boxZ: 25,
+        screenRotation: false,
+        screenRotationSpeed: 0.002,
+        screenRotationDistance: 60,
+        answerFeedback: 'Immediate',
+        rotateX: true,
+        rotateY: true,
+        rotateZ: true,
+        varyRotationDistance: false,
+        trialStartDelay: 500,
+        highlightDuration: 1200,
+        delayAfterSequence: 7500,
+        trialEndDelay: 1200,
+        highlightSimultaneously: true,
+        dotSize: 12, // Center Dot Size
+        blinkDot: true,
+        // Auto Progression settings
+        // Level adjustment
+        levelChangeByCorrect: 0,
+        everyCorrectLevel: 1,
+        levelChangeByIncorrect: 0,
+        everyIncorrectLevel: 1,
+        // Ball Speed adjustment
+        ballSpeedChangeByCorrect: 0.01,
+        everyCorrectBallSpeed: 1,
+        ballSpeedChangeByIncorrect: -0.01,
+        everyIncorrectBallSpeed: 1,
+        // Highlight Duration adjustment
+        highlightDurationChangeByCorrect: 0,
+        everyCorrectHighlightDuration: 1,
+        highlightDurationChangeByIncorrect: 0,
+        everyIncorrectHighlightDuration: 1,
+        // Delay Timer adjustment
+        delayAfterChangeByCorrect: 0,
+        everyCorrectDelayAfter: 1,
+        delayAfterChangeByIncorrect: 0,
+        everyIncorrectDelayAfter: 1,
+        use3DGlasses: false,
+        eyeSeparation: 1.0,
+        fov: 75,
+        useFps: false,
+        showFpsStats: false,
+        fps: 60,
+        graphics: 'Default',
+        resetRotation: 'On Game Start',
+        answerStyle: 'labels',
+        textDisplay: 'show',
+        divider: 'none',
+        dividerWidth: 1,
+      };
+
+      settings = {
+        ...defaultSettings,
+        startGame: startGame,
+        resetApp: resetApp,
+      }
+
+      loadSettings();
+
+      // Check for hub URL parameters
+      const urlParams = new URLSearchParams(window.location.search);
+      const isFromHub = urlParams.get('hub') === 'true' || urlParams.get('autostart') === 'true';
+      
+      // Apply ALL hub settings from URL params
+      if (isFromHub) {
+        // Core settings
+        if (urlParams.has('level')) settings.level = parseInt(urlParams.get('level')) || settings.level;
+        if (urlParams.has('balls')) settings.level = parseInt(urlParams.get('balls')) || settings.level;
+        if (urlParams.has('distractors')) settings.numBlueDistractors = parseInt(urlParams.get('distractors')) || settings.numBlueDistractors;
+        if (urlParams.has('ballSpeed')) settings.ballSpeed = parseInt(urlParams.get('ballSpeed')) / 100 || settings.ballSpeed;
+        if (urlParams.has('autoProgression')) settings.autoProgression = urlParams.get('autoProgression') === 'true';
+        
+        // Timing settings
+        if (urlParams.has('highlightDuration')) settings.highlightDuration = parseInt(urlParams.get('highlightDuration')) || settings.highlightDuration;
+        if (urlParams.has('delayAfter')) settings.delayAfterSequence = parseInt(urlParams.get('delayAfter')) || settings.delayAfterSequence;
+        if (urlParams.has('startDelay')) settings.trialStartDelay = parseInt(urlParams.get('startDelay')) || settings.trialStartDelay;
+        
+        // Box & Appearance
+        if (urlParams.has('boxX')) settings.boxX = parseInt(urlParams.get('boxX')) || settings.boxX;
+        if (urlParams.has('boxY')) settings.boxY = parseInt(urlParams.get('boxY')) || settings.boxY;
+        if (urlParams.has('boxZ')) settings.boxZ = parseInt(urlParams.get('boxZ')) || settings.boxZ;
+        if (urlParams.has('ballRadius')) settings.ballRadius = parseInt(urlParams.get('ballRadius')) / 10 || settings.ballRadius;
+        if (urlParams.has('boxTexture')) settings.boxTexture = urlParams.get('boxTexture') || settings.boxTexture;
+      }
+      
+      // Listen for hub settings via postMessage
+      window.addEventListener('message', (event) => {
+        if (event.data && event.data.type === 'HUB_SETTINGS') {
+          if (event.data.settings && event.data.settings.mot) {
+            const m = event.data.settings.mot;
+            // Core
+            if (m.level) settings.level = m.level;
+            if (m.balls) settings.level = m.balls;
+            if (m.distractors !== undefined) settings.numBlueDistractors = m.distractors;
+            if (m.ballSpeed) settings.ballSpeed = m.ballSpeed / 100;
+            if (m.autoProgression !== undefined) settings.autoProgression = m.autoProgression;
+            // Timing
+            if (m.highlightDuration) settings.highlightDuration = m.highlightDuration;
+            if (m.delayAfter) settings.delayAfterSequence = m.delayAfter;
+            if (m.startDelay) settings.trialStartDelay = m.startDelay;
+            // Box & Appearance
+            if (m.boxX) settings.boxX = m.boxX;
+            if (m.boxY) settings.boxY = m.boxY;
+            if (m.boxZ) settings.boxZ = m.boxZ;
+            if (m.ballRadius) settings.ballRadius = m.ballRadius / 10;
+            if (m.boxTexture) settings.boxTexture = m.boxTexture;
+            
+            saveSettings();
+            if (event.data.autostart) {
+              startGame();
+            }
+          }
+        }
+      });
+
+      // Hide GUI if from hub (minimalist mode)
+      if (isFromHub) {
+        setTimeout(() => {
+          const guiContainer = document.getElementById('gui-container');
+          if (guiContainer) guiContainer.style.display = 'none';
+        }, 100);
+      }
+
+      // Scene Setup
+      scene = new THREE.Scene();
+      scene.background = new THREE.Color(0x202020); // Dark gray background
+
+      let loadCount = 0;
+      const afterLoad = () => {
+        if (loadCount < 2) {
+          return;
+        }
+        startGame();
+      }
+      const loader = new EXRLoader();
+      loader.load("hdri.exr", (texture) => {
+          texture.mapping = THREE.EquirectangularReflectionMapping;
+          scene.environment = texture;
+          envMap = texture;
+          loadCount += 1;
+          afterLoad();
+      });
+
+
+      // Camera Setup
+      const aspect = window.innerWidth/window.innerHeight;
+      camera = new THREE.PerspectiveCamera(settings.fov, aspect, 0.01, 1000);
+      const fovRad = THREE.MathUtils.degToRad(settings.fov) * aspect;
+      const requiredZ = (settings.boxY) / Math.tan(fovRad / 2);
+      camera.position.z = settings.boxZ + requiredZ;
+      camera.focus = 1.5 * settings.boxZ;
+
+      // Renderer Setup
+      renderer = new THREE.WebGLRenderer({ antialias: true });
+      renderer.setSize(window.innerWidth, window.innerHeight);
+      renderer.toneMapping = THREE.ACESFilmicToneMapping;
+      renderer.toneMappingExposure = 1.0;
+      gameContainer.appendChild(renderer.domElement);
+
+      // Controls
+      controls = new OrbitControls(camera, renderer.domElement);
+      controls.zoomSpeed = 0.65;
+      controls.enableDamping = true;
+      controls.enableZoom = true;
+      controls.enableRotate = true;
+      controls.enablePan = false;
+
+      // Lighting
+      ambientLight = new THREE.AmbientLight(0xffffff, 0.40);
+      scene.add(ambientLight);
+
+      directionalLight = new THREE.DirectionalLight(0xffffff, 0.7);
+      directionalLight.position.set(settings.boxX / 3, settings.boxY, settings.boxZ * 2 / 3);
+      scene.add(directionalLight);
+
+      scene.add(camera);
+
+      anaglyphEffect = new AnaglyphEffect(renderer, settings.eyeSeparation);
+      anaglyphEffect.setSize(window.innerWidth, window.innerHeight);
+
+      const textureLoader = new THREE.TextureLoader();
+      ballTexture = textureLoader.load('texture.jpg');
+      ballNormalTexture = textureLoader.load('normal.jpg');
+      ballTexture.repeat.set(0.5, 0.5);
+      ballNormalTexture.repeat.set(0.5, 0.5);
+      ballTexture.offset.set(0.31, 0.0);
+      ballNormalTexture.offset.set(0.31, 0.0);
+
+      ballTextureLow = textureLoader.load('texture_low.png');
+      ballTextureLow.repeat.set(0.5, 0.5);
+      ballTextureLow.offset.set(0.31, 0.0);
+
+      ballLightmap = textureLoader.load('lightmap.png');
+      ballLightmap.colorSpace = THREE.SRGBColorSpace;
+      ballLightmap.wrapS = THREE.RepeatWrapping;
+      ballLightmap.wrapT = THREE.RepeatWrapping;
+
+      gui = new dat.GUI({ autoPlace: false });
+      document.getElementById('gui-container').appendChild(gui.domElement);
+
+      gui.add(settings, 'level').name('Level');
+      gui.add(settings, 'numBlueDistractors').name('# Blue Distractors');
+      gui.add(settings, 'numColoredDistractors').name('# Colored Distractors');
+      gui.add(settings, 'ballSpeed').min(0).step(0.001).name('Ball Speed');
+      gui.add(settings, 'ballRadius').min(0.01).max(8).name('Ball Size').onChange(() => startGame());
+      gui.add(settings, 'boxX').min(10).max(100).name('Box Width').onChange(() => startGame());
+      gui.add(settings, 'boxY').min(10).max(100).name('Box Height').onChange(() => startGame());
+      gui.add(settings, 'boxZ').min(1).max(100).name('Box Depth').onChange(() => {
+        camera.focus = 1.5 * settings.boxZ;
+        startGame()
+      });
+      gui.add(settings, 'fov').min(40).max(120).name('FOV').onChange((value) => {
+        camera.fov = value;
+        camera.updateProjectionMatrix();
+      });
+      const ballAppearanceFolder = gui.addFolder('Ball/Box Appearance');
+      ballAppearanceFolder.add(settings, 'graphics', ['Default', 'Low', 'Potato']).name('Graphics').onChange(() => {
+        updateGraphicsMode();
+        startGame();
+      });
+      ballAppearanceFolder.add(settings, 'ballOpacity').min(0.5).max(1.0).name('Ball Opacity').onChange(updateBallAppearance);
+      ballAppearanceFolder.add(settings, 'ballRoughness').min(0.0).max(1.0).name('Ball Roughness').onChange(updateBallAppearance);
+      ballAppearanceFolder.add(settings, 'ballMetalness').min(0.0).max(1.0).name('Ball Metalness').onChange(updateBallAppearance);
+      ballAppearanceFolder.add(settings, 'boxTexture', ['Gray', 'Black', 'White', 'Wall 1', 'Wall 2', 'Wall 3']).name('Box Walls').onChange(updateBoxAppearance);
+      ballAppearanceFolder.add(settings, 'textDisplay', {'Show':'show', 'Hide all': 'hideall', 'Hide all except buttons': 'hideexceptbuttons'}).name('Text UI Display').onChange(updateTextDisplay);
+      updateTextDisplay();
+
+      updateGraphicsMode();
+
+      const screenRotationFolder = gui.addFolder('Screen Rotation');
+      screenRotationFolder.add(settings, 'screenRotation').name('Enable');
+      screenRotationFolder.add(settings, 'screenRotationSpeed').name('Speed');
+      screenRotationFolder.add(settings, 'screenRotationDistance').name('Distance');
+      screenRotationFolder.add(settings, 'rotateX').name('Rotate X');
+      screenRotationFolder.add(settings, 'rotateY').name('Rotate Y');
+      screenRotationFolder.add(settings, 'rotateZ').name('Rotate Z');
+      screenRotationFolder.add(settings, 'varyRotationDistance').name('Vary Distance');
+
+
+      // Add Center Dot Size Controller
+      gui.add(settings, 'dotSize').name('Center Dot Size').min(0).onChange(updateCenterDot);
+      gui.add(settings, 'blinkDot').name('Make Dot Blink').onChange(updateCenterDot);
+      gui.add(settings, 'use3DGlasses').name('Use 3D Glasses').onChange(updateCenterDot);
+      gui.add(settings, 'eyeSeparation').name('3D Disparity').min(0).max(1.5).onChange((val) => {
+        anaglyphEffect._stereo.eyeSep = val;
+      });
+
+      const partitionFolder = gui.addFolder('Partition Settings');
+      partitionFolder.add(settings, 'divider', {'None': 'none', 'Vertical': 'vertical'}).name('Divider').onChange(startGame);
+      partitionFolder.add(settings, 'dividerWidth').min(0.1).max(3).name('Divider Width').onChange(startGame);
+
+      // Auto Progression GUI
+      const autoProgressionFolder = gui.addFolder('Auto Progression');
+      autoProgressionFolder.add(settings, 'autoProgression').name('Enable');
+
+      const levelAdjustmentFolder = autoProgressionFolder.addFolder('Level Adjustment');
+      levelAdjustmentFolder.add(settings, 'levelChangeByCorrect').name('Change by');
+      levelAdjustmentFolder.add(settings, 'everyCorrectLevel').name('Every Correct').min(1).step(1);
+      levelAdjustmentFolder.add(settings, 'levelChangeByIncorrect').name('Change by');
+      levelAdjustmentFolder.add(settings, 'everyIncorrectLevel').name('Every Incorrect').min(1).step(1);
+
+      const ballSpeedAdjustmentFolder = autoProgressionFolder.addFolder('Ball Speed Adjustment');
+      ballSpeedAdjustmentFolder.add(settings, 'ballSpeedChangeByCorrect').name('Change by');
+      ballSpeedAdjustmentFolder.add(settings, 'everyCorrectBallSpeed').name('Every Correct').min(1).step(1);
+      ballSpeedAdjustmentFolder.add(settings, 'ballSpeedChangeByIncorrect').name('Change by');
+      ballSpeedAdjustmentFolder.add(settings, 'everyIncorrectBallSpeed').name('Every Incorrect').min(1).step(1);
+
+      const highlightDurationAdjustmentFolder = autoProgressionFolder.addFolder('Highlight Duration Adjustment');
+      highlightDurationAdjustmentFolder.add(settings, 'highlightDurationChangeByCorrect').name('Change by');
+      highlightDurationAdjustmentFolder.add(settings, 'everyCorrectHighlightDuration').name('Every Correct').min(1).step(1);
+      highlightDurationAdjustmentFolder.add(settings, 'highlightDurationChangeByIncorrect').name('Change by');
+      highlightDurationAdjustmentFolder.add(settings, 'everyIncorrectHighlightDuration').name('Every Incorrect').min(1).step(1);
+
+      const delayTimerAdjustmentFolder = autoProgressionFolder.addFolder('Delay Timer Adjustment');
+      delayTimerAdjustmentFolder.add(settings, 'delayAfterChangeByCorrect').name('Change by');
+      delayTimerAdjustmentFolder.add(settings, 'everyCorrectDelayAfter').name('Every Correct').min(1).step(1);
+      delayTimerAdjustmentFolder.add(settings, 'delayAfterChangeByIncorrect').name('Change by');
+      delayTimerAdjustmentFolder.add(settings, 'everyIncorrectDelayAfter').name('Every Incorrect').min(1).step(1);
+
+      const fpsFolder = gui.addFolder('FPS ');
+      const fpdFolderTitle = fpsFolder.domElement.querySelector('.title');
+
+      const fpsLink = document.createElement('a');
+      fpsLink.href = '#';
+      fpsLink.style.color = '#55A7E3';
+      fpsLink.style.textDecoration = 'none';
+      fpsLink.style.marginLeft = '2rem';
+      fpsLink.innerText = 'Site slow?';
+      fpsLink.onclick = function(event) {
+          event.preventDefault();
+          event.stopPropagation();
+          openFpsPopup();
+      };
+
+      window.openFpsPopup = () => {
+        document.getElementById('fps-popup').style.display = 'block';
+      }
+
+      window.closeFpsPopup = () => {
+        document.getElementById('fps-popup').style.display = 'none';
+      }
+
+      window.openInfoPopup = () => {
+        document.getElementById('info-popup').style.display = 'block';
+      }
+
+      window.closeInfoPopup = () => {
+        document.getElementById('info-popup').style.display = 'none';
+      }
+
+      fpdFolderTitle.appendChild(fpsLink);
+
+      fpsFolder.add(settings, 'useFps').name('Throttle FPS').onChange(enabled => {
+        updateFpsSettings();
+        switchFps(enabled);
+      });
+      fpsFolder.add(settings, 'showFpsStats').name('FPS Counter').onChange(updateFpsStats);
+      updateFpsStats();
+
+      const fpsController = fpsFolder.add(settings, 'fps').min(1).name('FPS').onChange(updateFpsSettings);
+      const switchFps = (enabled) => {
+        if (enabled) {
+          fpsController.domElement.style.pointerEvents = 'auto';
+          fpsController.domElement.style.opacity = '1.0';
+        } else {
+          fpsController.domElement.style.pointerEvents = 'none';
+          fpsController.domElement.style.opacity = '0.5';
+        }
+      }
+      switchFps(settings.useFps);
+      updateFpsSettings();
+
+      const trialBehaviorFolder = gui.addFolder('Game Timing/Behavior');
+      trialBehaviorFolder.add(settings, 'answerStyle', { 'Keyboard': 'labels', "Keyboard (Don't rotate at end)": 'labels_no_rotate', "Click Only": 'none'}).name('Answer Style');
+      trialBehaviorFolder.add(settings, 'answerFeedback', ['Immediate', 'After Selection']).name('Feedback');
+      trialBehaviorFolder.add(settings, 'resetRotation', ['Never', 'On Game Start']).name('Reset Camera');
+      trialBehaviorFolder.add(settings, 'trialStartDelay').name('Trial Start Delay (ms)');
+      trialBehaviorFolder.add(settings, 'highlightDuration').name('Highlight Duration');
+      trialBehaviorFolder.add(settings, 'delayAfterSequence').name('Delay After');
+      trialBehaviorFolder.add(settings, 'trialEndDelay').name('Trial End Delay (ms)');
+      trialBehaviorFolder.add(settings, 'highlightSimultaneously').name('Highlight Together');
+
+      const resetFolder = gui.addFolder('Reset App');
+      resetFolder.add(settings, 'resetApp').name('Reset to default');
+
+      // Add "Start Game" button at the end
+      const restartGameButton = gui.add(settings, 'startGame').name('Restart Game');
+      restartGameButton.domElement.parentElement.parentElement.id = 'big-button';
+
+      // Event Listeners
+      window.addEventListener('resize', onWindowResize, false);
+      renderer.domElement.addEventListener('pointerdown', onDocumentMouseDown, false);
+
+      const subControllers = Object.values(gui.__folders).flatMap(folder => folder.__controllers);
+      [...gui.__controllers, ...subControllers].forEach(controller => {
+        const originalOnChange = controller.__onChange;
+        controller.onChange((value) => {
+          if (originalOnChange)
+            originalOnChange(value);
+          updateSettings();
+          saveSettings();
+        });
+      });
+
+      // Event Listeners for Graph Buttons
+      showGraphButton.addEventListener('click', () => {
+        if (graphPopup.style.display === 'block') {
+          graphPopup.style.display = 'none';
+        } else {
+          graphPopup.style.display = 'block';
+          renderProgressChart();
+        }
+      });
+
+      closeGraphButton.addEventListener('click', () => {
+        graphPopup.style.display = 'none';
+      });
+
+      // Load the font once
+      const fontLoader = new FontLoader();
+      fontLoader.load('https://threejs.org/examples/fonts/helvetiker_regular.typeface.json', function(font) {
+        loadedFont = font;
+        loadCount += 1;
+        afterLoad();
+      }, undefined, function(err) {
+        console.error('An error happened loading the font:', err);
+        loadCount += 1;
+        afterLoad();
+      });
+
+      // Initialize the center dot
+      updateCenterDot();
+      document.addEventListener("keydown", event => {
+        const tagName = event.target.tagName.toLowerCase();
+        const isEditable = event.target.isContentEditable;
+        if (tagName === "input" || tagName === "textarea" || isEditable) {
+            return;
+        }
+        switch (event.code) {
+          case "KeyR":
+            startGame();
+            break;
+          default:
+            break;
+        }
+
+        for (const [text, code] of INPUT_HOTKEYS) {
+          if (code === event.code) {
+            handleHotkey(text);
+          }
+        }
+      });
+    }
+
+    function updateCenterDot() {
+      const size = settings.dotSize;
+      if (size <= 0) {
+        centerDotElement.style.display = 'none';
+      } else {
+        centerDotElement.style.display = 'block';
+        centerDotElement.style.width = `${size}px`;
+        centerDotElement.style.height = `${size}px`;
+      }
+
+      const shouldBlinkDot = settings.blinkDot;
+      if (shouldBlinkDot) {
+        centerDotElement.classList.add('blink');
+      } else {
+        centerDotElement.classList.remove('blink');
+      }
+
+      if (settings.use3DGlasses) {
+        centerDotElement.classList.add('anaglyph');
+      } else {
+        centerDotElement.classList.remove('anaglyph');
+      }
+    }
+
+    function startGame() {
+      if (isGameStarting) return; // Prevent multiple initializations
+      isGameStarting = true;
+
+      if (settings.resetRotation === 'On Game Start') {
+        const radius = camera.position.length();
+        controls.reset();
+        camera.position.set(0, 0, radius);
+        camera.lookAt(0, 0, 0);
+      }
+
+      // Disable the Start Game button
+      gui.__controllers.forEach(controller => {
+        if (controller.property === 'startGame') {
+          controller.__li.classList.add('disabled');
+        }
+      });
+
+      // Clear previous timeouts and intervals
+      activeTimeouts.forEach(timeout => clearTimeout(timeout));
+      activeTimeouts = [];
+
+      // Clear game-specific objects
+      clearGameObjects();
+
+      // Reset game state variables
+      isSequenceShowing = false;
+      isUserTurn = false;
+      messageElement.textContent = '';
+      screenRotationAngle = 0;
+      panAngle = 0;
+      panAngleDx = 0.0023;
+      mistakeMade = false; // Reset mistake flag
+
+      // Create Bounding Box
+      createBoundingBox();
+
+      // Create Balls
+      findLowClusterBallSetup();
+      for (const ball of balls) {
+        scene.add(ball);
+      }
+
+      // Start Sequence
+      let timeout = setTimeout(highlightTargetBalls, settings.trialStartDelay);
+      activeTimeouts.push(timeout);
+
+      // Re-enable the Start Game button after initialization
+      isGameStarting = false;
+      gui.__controllers.forEach(controller => {
+        if (controller.property === 'startGame') {
+          controller.__li.classList.remove('disabled');
+        }
+      });
+    }
+
+    function clearGameObjects() {
+      clearBalls();
+      for (let i = scene.children.length - 1; i >= 0; i--) {
+        const obj = scene.children[i];
+        if (obj.userData.isGameObject) {
+          disposeObject(obj);
+          scene.remove(obj);
+        }
+      }
+      targetSequence = [];
+      userSequence = [];
+      selectedBalls = [];
+    }
+
+    function clearBalls() {
+      for (const ball of balls) {
+        disposeObject(ball);
+        scene.remove(ball);
+      }
+      balls = [];
+      targetBalls = [];
+      distractorBalls = [];
+      coloredDistractorBalls = [];
+    }
+
+    function disposeObject(obj) {
+      if (obj.geometry) obj.geometry.dispose();
+      if (obj.material) {
+        if (Array.isArray(obj.material)) {
+          obj.material.forEach(material => material.dispose());
+        } else {
+          obj.material.dispose();
+        }
+      }
+      // Dispose of children recursively
+      if (obj.children) {
+        obj.children.forEach(child => disposeObject(child));
+      }
+    }
+
+    function updateSettings() {
+      // Update settings from GUI
+      settings.level = Math.max(1, Math.round(settings.level));
+      settings.numBlueDistractors = Math.round(settings.numBlueDistractors);
+      settings.numColoredDistractors = Math.round(settings.numColoredDistractors);
+    }
+
+    function loadSettings() {
+      const storedSettings = JSON.parse(localStorage.getItem('jiggle-3d-settings'));
+      if (storedSettings) {
+        Object.assign(settings, storedSettings);
+      }
+    }
+
+    function saveSettings() {
+      localStorage.setItem('jiggle-3d-settings', JSON.stringify(settings));
+    }
+
+    function repopulateGui() {
+      gui.__controllers.forEach(controller => controller.updateDisplay());
+      Object.values(gui.__folders).forEach(folder => {
+        folder.__controllers.forEach(controller => controller.updateDisplay());
+      });
+    }
+
+    function resetApp() {
+      Object.assign(settings, defaultSettings);
+      saveSettings();
+      repopulateGui();
+      updateGraphicsMode();
+      updateTextDisplay();
+      startGame();
+    }
+
+    function createBoundingBox() {
+      const boxX = settings.boxX;
+      const boxY = settings.boxY;
+      const boxZ = settings.boxZ;
+
+      const geometry = new THREE.BoxGeometry(boxX, boxY, boxZ);
+      let material;
+      if (['Potato', 'Low'].includes(settings.graphics)) {
+        material = new THREE.MeshBasicMaterial({
+          color: 0x444444,
+          transparent: true,
+          side: THREE.BackSide,
+        });
+      } else {
+        material = new THREE.MeshStandardMaterial({
+          color: "#2D2D2D",
+          transparent: true,
+          side: THREE.BackSide,
+          metalness: 0.9,
+          roughness: 0.8,
+          emissive: "#FFFFFF",
+          emissiveIntensity: 0.08,
+          envMap: envMap,
+          envMapIntensity: 0.7,
+        });
+      }
+      const box = new THREE.Mesh(geometry, material);
+      box.receiveShadow = false;
+      box.userData.isGameObject = true;
+      scene.add(box);
+      boundingBox = box;
+
+      const edges = new THREE.EdgesGeometry(geometry);
+      const edgeMaterial = new THREE.LineBasicMaterial({
+        color: 0xffffff,
+        transparent: true,
+        opacity: 0.2,
+      });
+      boundingBoxEdges = new THREE.LineSegments(edges, edgeMaterial);
+      boundingBoxEdges.userData.isGameObject = true;
+      boundingBoxEdges.scale.set(0.998, 0.998, 0.998)
+      scene.add(boundingBoxEdges);
+      updateBoxAppearance();
+
+      if (settings.divider === 'vertical') {
+        const dividerGeometry = new THREE.BoxGeometry(settings.dividerWidth, boxY - 0.0001, boxZ - 0.0001);
+        const dividerMaterial = new THREE.MeshStandardMaterial({
+          color: 0x444444,
+          transparent: true,
+          opacity: 0.1,
+        });
+        const divider = new THREE.Mesh(dividerGeometry, dividerMaterial);
+        divider.userData.isGameObject = true;
+        scene.add(divider);
+        globalDivider = divider;
+      }
+    }
+
+    function repeatTexture(texture, x, y) {
+        texture.wrapS = THREE.RepeatWrapping;
+        texture.wrapT = THREE.RepeatWrapping;
+        texture.repeat.set(x, y);
+    }
+
+    function updateBoxAppearance() {
+      boundingBox.material.map = null;
+      boundingBox.material.normalMap = null;
+      boundingBox.material.color.set('#2D2D2D');
+      boundingBox.material.opacity = 0.3;
+      boundingBox.material.metalness = 0.90;
+      boundingBox.material.roughness = 0.70;
+      boundingBox.material.emissiveIntensity = 0.04;
+      boundingBox.material.envMapIntensity = 0.7;
+      boundingBox.material.lightMapIntensity = 1.0;
+      boundingBoxEdges.material.color.set('#ffffff');
+      boundingBoxEdges.material.opacity = 0.2;
+      switch (settings.boxTexture) {
+        case 'Wall 1':
+          if (!wallTexture1) {
+            const loader = new THREE.TextureLoader();
+            wallTexture1 = loader.load('textures/wall1_color.jpg');
+            wallNormal1 = loader.load('textures/wall1_normal.jpg');
+          }
+          if (!['Potato', 'Low'].includes(settings.graphics)) {
+            boundingBox.material.map = wallTexture1;
+            boundingBox.material.normalMap = wallNormal1;
+          }
+          boundingBox.material.color.set("#FFFFFF");
+          boundingBox.material.opacity = 1.0;
+          boundingBox.material.metalness = 0.6;
+          boundingBox.material.roughness = 0.8;
+          boundingBox.material.envMapIntensity = 0.15;
+          boundingBox.material.emissiveIntensity = 0.01;
+          break;
+        case 'Wall 2':
+          if (!wallTexture2) {
+            const loader = new THREE.TextureLoader();
+            wallTexture2 = loader.load('textures/wall2_color.jpg');
+            wallNormal2 = loader.load('textures/wall2_normal.jpg');
+            repeatTexture(wallTexture2, 2, 2);
+            repeatTexture(wallNormal2, 2, 2);
+          }
+          if (!['Potato', 'Low'].includes(settings.graphics)) {
+            boundingBox.material.map = wallTexture2;
+            boundingBox.material.normalMap = wallNormal2;
+          }
+          boundingBox.material.color.set("#FFEEEE");
+          boundingBox.material.opacity = 1.0;
+          boundingBox.material.metalness = 0.8;
+          boundingBox.material.roughness = 0.6;
+          boundingBox.material.envMapIntensity = 0.2;
+          boundingBox.material.emissiveIntensity = 0.015;
+          break;
+        case 'Wall 3':
+          if (!wallTexture3) {
+            const loader = new THREE.TextureLoader();
+            wallTexture3 = loader.load('textures/wall3_color.jpg');
+            wallNormal3 = loader.load('textures/wall3_normal.png');
+            repeatTexture(wallTexture3, 1, 1);
+            repeatTexture(wallNormal3, 1, 1);
+          }
+          if (!['Potato', 'Low'].includes(settings.graphics)) {
+            boundingBox.material.map = wallTexture3;
+            boundingBox.material.normalMap = wallNormal3;
+          }
+          boundingBox.material.color.set("#FFEEEE");
+          boundingBox.material.opacity = 1.0;
+          boundingBox.material.metalness = 0.8;
+          boundingBox.material.roughness = 0.6;
+          boundingBox.material.envMapIntensity = 0.2;
+          boundingBox.material.emissiveIntensity = 0.015;
+          break;
+        case 'Black':
+          boundingBox.material.color.set('#050505');
+          boundingBox.material.opacity = 1.0;
+          boundingBox.material.metalness = 0.8;
+          boundingBox.material.roughness = 0.9;
+          boundingBox.material.emissiveIntensity = 0.00;
+          break;
+        case 'White':
+          boundingBox.material.color.set('#ffffff');
+          boundingBox.material.opacity = 1.0;
+          boundingBoxEdges.material.color.set('#222222');
+          boundingBoxEdges.material.opacity = 1.0;
+          boundingBox.material.metalness = 1.0;
+          boundingBox.material.roughness = 1.0;
+          boundingBox.material.emissiveIntensity = 0.3;
+          break;
+        default:
+          break;
+      }
+      boundingBox.material.needsUpdate = true;
+      boundingBoxEdges.material.needsUpdate = true;
+    }
+
+    function updateGraphicsMode() {
+      if (['Potato', 'Low'].includes(settings.graphics)) {
+        scene.remove(ambientLight);
+        scene.remove(directionalLight);
+      } else {
+        scene.add(ambientLight);
+        scene.add(directionalLight);
+      }
+    }
+
+    function updateTextDisplay() {
+      if (settings.textDisplay === 'hideall') {
+        averageDisplayElement.classList.add('hidden');
+        instructionsElement.classList.add('hidden');
+        messageElement.classList.add('hidden');
+        averageDisplayElement.classList.remove('hidden-text');
+        instructionsElement.classList.remove('hidden-text');
+        messageElement.classList.remove('hidden-text');
+      } else if (settings.textDisplay === 'hideexceptbuttons') {
+        averageDisplayElement.classList.remove('hidden');
+        instructionsElement.classList.remove('hidden');
+        messageElement.classList.remove('hidden');
+        averageDisplayElement.classList.add('hidden-text');
+        instructionsElement.classList.add('hidden-text');
+        messageElement.classList.add('hidden-text');
+      } else {
+        averageDisplayElement.classList.remove('hidden');
+        instructionsElement.classList.remove('hidden');
+        messageElement.classList.remove('hidden');
+        averageDisplayElement.classList.remove('hidden-text');
+        instructionsElement.classList.remove('hidden-text');
+        messageElement.classList.remove('hidden-text');
+      }
+    }
+
+    function findLowClusterBallSetup() {
+      createBalls();
+      if (balls.length > 15) {
+        return;
+      }
+      let backup = balls.map(b => ({ position: b.position.clone(), velocity: b.userData.velocity.clone() }));
+      let bestBackup = backup;
+      let bestBadFrames = 999999;
+      for (let tries = 0; tries < 8; tries++) {
+        const numFrameChecks = 30;
+        const numSteps = 8;
+        const delta = 2;
+        let badFrames = 0;
+        for (let check = 0; check < numFrameChecks; check++) {
+          for (let i = 0; i < numSteps; i++) {
+            updateBallPositions(delta);
+          }
+          const clusterBalls = countClusterBalls();
+          if (clusterBalls >= 2) {
+            badFrames += 1;
+          }
+        }
+        if (badFrames < bestBadFrames) {
+          bestBackup = backup;
+          bestBadFrames = badFrames;
+        }
+        if (bestBadFrames <= 2) {
+          break;
+        }
+        clearBalls();
+        createBalls();
+        backup = balls.map(b => ({ position: b.position.clone(), velocity: b.userData.velocity.clone() }));
+      }
+
+      for (let i = 0; i < balls.length; i++) {
+        balls[i].position.copy(bestBackup[i].position);
+        balls[i].userData.velocity.copy(bestBackup[i].velocity);
+      }
+    }
+
+    function countClusterBalls() {
+      let total = 0;
+      for (let i = 0; i < balls.length; i++) {
+        let neighbors = 0;
+        for (let j = i + 1; j < balls.length; j++) {
+          const ball1 = balls[i];
+          const ball2 = balls[j];
+
+          const pos1 = ball1.position;
+          const pos2 = ball2.position;
+
+          const distance = pos1.distanceTo(pos2);
+          const minDist = 10 * settings.ballRadius;
+          if (distance < minDist) {
+            neighbors += 1;
+          }
+        }
+        if (neighbors > 3) {
+          total += 1;
+        }
+      }
+      return total;
+    }
+
+    function createBalls() {
+      for (let i = 0; i < settings.level; i++) {
+        const ball = createBall(DEFAULT_BALL_COLOR); // Sky blue ball
+        balls.push(ball);
+        targetBalls.push(ball);
+      }
+
+      // Create Blue Distractor Balls
+      for (let i = 0; i < settings.numBlueDistractors; i++) {
+        const ball = createBall(DEFAULT_BALL_COLOR); // Sky blue ball
+        balls.push(ball);
+        distractorBalls.push(ball);
+      }
+
+      // Create Colored Distractor Balls
+      for (let i = 0; i < settings.numColoredDistractors; i++) {
+        const color = getRandomColor([DEFAULT_BALL_COLOR, RED, YELLOW]); // Exclude sky blue, red, yellow
+        const ball = createBall(color);
+        balls.push(ball);
+        coloredDistractorBalls.push(ball);
+      }
+
+      const boxX = settings.boxX;
+      const boxY = settings.boxY;
+      const boxZ = settings.boxZ;
+
+      if (settings.divider === 'vertical') {
+        const leftBalls = [
+          ...targetBalls.slice(0,            Math.ceil(targetBalls.length / 2)),
+          ...distractorBalls.slice(0,        Math.ceil(distractorBalls.length / 2)),
+          ...coloredDistractorBalls.slice(0, Math.ceil(coloredDistractorBalls.length / 2)),
+        ];
+        const rightBalls = [
+          ...targetBalls.slice(           Math.ceil(targetBalls.length / 2),                       targetBalls.length),
+          ...distractorBalls.slice(       Math.ceil(distractorBalls.length / 2),               distractorBalls.length),
+          ...coloredDistractorBalls.slice(Math.ceil(coloredDistractorBalls.length / 2), coloredDistractorBalls.length),
+        ];
+        assignRandomPositions(leftBalls, -boxX/2, 0, -boxY/2, boxY/2, -boxZ/2, boxZ/2);
+        assignRandomPositions(rightBalls, 0, boxX/2, -boxY/2, boxY/2, -boxZ/2, boxZ/2);
+      } else {
+        assignRandomPositions(balls, -boxX/2, boxX/2, -boxY/2, boxY/2, -boxZ/2, boxZ/2);
+      }
+      assignRandomMovement(balls);
+    }
+
+    function updateBallAppearance() {
+      for (const ball of balls) {
+        ball.material.metalness = (settings.ballMetalness);
+        ball.material.roughness = (settings.ballRoughness);
+        ball.material.opacity = (settings.ballOpacity);
+      }
+    }
+
+    function createBall(color) {
+      const geometry = new THREE.SphereGeometry(settings.ballRadius, 32, 32);
+      geometry.setAttribute('uv2', new THREE.Float32BufferAttribute(geometry.attributes.uv.array, 2));
+      let material;
+      if (settings.graphics === 'Potato') {
+        material = new THREE.MeshBasicMaterial({ color: color });
+      } else if (settings.graphics === 'Low') {
+        material = new THREE.MeshBasicMaterial({ color: color, map: ballTextureLow });
+      } else {
+        material = new THREE.MeshStandardMaterial({
+          color: color,
+          metalness: settings.ballMetalness,
+          roughness: settings.ballRoughness,
+          transparent: true,
+          opacity: settings.ballOpacity,
+          map: ballTexture,
+          normalMap: ballNormalTexture,
+          envMap: envMap,
+          envMapIntensity: 1.0,
+          lightMap: ballLightmap,
+          lightMapIntensity: 2.0,
+        });
+      }
+
+      const ball = new THREE.Mesh(geometry, material);
+      ball.receiveShadow = false;
+      ball.userData = {
+        velocity: new THREE.Vector3(),
+        rotationGroup: 0,
+        rotationAxis: '',
+        originalColor: color,
+        rotationAngle: 0,
+        isGameObject: true, // Mark as game object
+        isCurrentlyHighlighted: false,
+      };
+
+      const outlineRadius = settings.ballRadius + (['Potato', 'Low'].includes(settings.graphics) ? (settings.ballRadius / 6) : (settings.ballRadius / 15));
+      const outlineGeometry = new THREE.SphereGeometry(outlineRadius, 32, 32);
+      const outlineMaterial = new THREE.MeshBasicMaterial({
+        color: 0x000000,
+        side: THREE.BackSide,
+        ...(['Potato', 'Low'].includes(settings.graphics) ? {} : { opacity: 0.9, transparent: true }),
+      });
+      const outline = new THREE.Mesh(outlineGeometry, outlineMaterial);
+      ball.add(outline);
+
+      return ball;
+    }
+
+    function createEqualIntervals(start, end, n, jitter) {
+      start += settings.ballRadius;
+      end -= settings.ballRadius;
+      const width = end - start;
+      const shift = (Math.random() - 0.5) * jitter;
+      const positions = Array.from({ length: n }, (_, i) => start + (i / (n-1)) * width + jitter);
+      shuffleArray(positions);
+      return positions;
+    }
+
+    function assignRandomPositions(ballArray, startX, endX, startY, endY, startZ, endZ) {
+      const radius = settings.ballRadius;
+      const xPositions = createEqualIntervals(startX, endX, ballArray.length, 0.2);
+      const yPositions = createEqualIntervals(startY, endY, ballArray.length, 0.2);
+      const zPositions = createEqualIntervals(startZ, endZ, ballArray.length, 0.2);
+
+      const placedPositions = [];
+      function isOverlapping(x, y, z) {
+        return placedPositions.some(([px, py, pz]) => {
+          const distSq = (px - x) ** 2 + (py - y) ** 2 + (pz - z) ** 2;
+          return distSq < (2 * radius) ** 2;
+        });
+      }
+
+      for (let i = 0; i < ballArray.length; i++) {
+        let x = xPositions[i];
+        let y = yPositions[i];
+        let z = zPositions[i];
+        let attempts = 0;
+        const maxAttempts = 500;
+
+        while (isOverlapping(x, y, z) && attempts < maxAttempts) {
+          x = Math.random() * (endX - startX) + startX;
+          y = Math.random() * (endY - startY) + startY;
+          z = Math.random() * (endZ - startZ) + startZ;
+          attempts++;
+        };
+
+        placedPositions.push([x, y, z]);
+        ballArray[i].position.set(x, y, z);
+      }
+    }
+
+    function assignRandomMovement(ballArray) {
+      const leftCount = Math.floor(ballArray.length / 2);
+      const rightCount = ballArray.length - leftCount;
+      const xVelocities = [...createEqualIntervals(-0.5, -0.05, leftCount, 0.02), ...createEqualIntervals(0.05, 0.5, rightCount, 0.02)];
+      const yVelocities = [...createEqualIntervals(-0.5, -0.05, leftCount, 0.02), ...createEqualIntervals(0.05, 0.5, rightCount, 0.02)];
+      for (let i in ballArray) {
+        const ball = ballArray[i];
+        const direction = new THREE.Vector3(
+          xVelocities[i],
+          yVelocities[i],
+          (Math.random() < 0.5 ? 0.5 : 2.0) * (Math.random() - 0.5)
+        ).normalize();
+        ball.userData.velocity.copy(direction.multiplyScalar(settings.ballSpeed));
+      }
+    }
+
+    function highlightTargetBalls() {
+      isSequenceShowing = true;
+      targetSequence = [];
+      for (let i = 0; i < targetBalls.length; i++) {
+        targetSequence.push({ ball: targetBalls[i] });
+      }
+
+      // Build highlightSequence from targetSequence
+      let highlightSequence = [...targetSequence];
+
+      // Shuffle the highlightSequence for Random Mode
+      function highlightAllBalls(callback) {
+        isSequenceShowing = true;
+        for (const object of highlightSequence) {
+          object.ball.material.color.set(ORANGE);
+          if (!['Potato', 'Low'].includes(settings.graphics)) {
+            object.ball.material.emissive.set(ORANGE);
+            object.ball.material.emissiveIntensity = 0.15;
+          }
+          object.ball.userData.isCurrentlyHighlighted = true;
+          object.ball.children[0].material.color.set("#77FFFF");
+          object.ball.children[0].scale.set(1.1, 1.1, 1.1);
+        }
+        let timeout = setTimeout(() => {
+          for (const object of highlightSequence) {
+            object.ball.material.color.set(DEFAULT_BALL_COLOR);
+            if (!['Potato', 'Low'].includes(settings.graphics)) {
+              object.ball.material.emissive.set(null);
+              object.ball.material.emissiveIntensity = 0.0;
+            }
+            object.ball.material.needsUpdate = true;
+            object.ball.userData.isCurrentlyHighlighted = false; // Unmark as highlighted
+            object.ball.children[0].material.color.set("#000000");
+            object.ball.children[0].scale.set(1, 1, 1);
+          }
+          isSequenceShowing = false;
+          callback();
+        }, settings.highlightDuration);
+        activeTimeouts.push(timeout);
+      }
+
+      let index = 0;
+      function highlightNextBall(callback) {
+        if (index > 0) {
+          // Reset previous ball color
+          const previous = highlightSequence[index - 1];
+          previous.ball.material.color.set(DEFAULT_BALL_COLOR);
+          previous.ball.userData.isCurrentlyHighlighted = false; // Unmark as highlighted
+        }
+        if (index < highlightSequence.length) {
+          // Highlight current ball
+          const current = highlightSequence[index];
+          current.ball.material.color.set(RED);
+          current.ball.userData.isCurrentlyHighlighted = true; // Mark as highlighted
+
+          index++;
+          let timeout = setTimeout(() => highlightNextBall(callback), settings.highlightDuration);
+          activeTimeouts.push(timeout);
+        } else {
+          // End of sequence
+          isSequenceShowing = false;
+          const lastBall = highlightSequence[index - 1].ball;
+          lastBall.material.color.set(DEFAULT_BALL_COLOR);
+          lastBall.userData.isCurrentlyHighlighted = false; // Unmark as highlighted
+          callback();
+        }
+      }
+  
+      function afterHighlight() {
+        messageElement.textContent = 'Get Ready...';
+        let timeout = setTimeout(() => {
+          isUserTurn = true;
+          mistakeMade = false;
+          messageElement.textContent = 'Select in any order';
+          freezeBalls();
+          labelBalls();
+        }, settings.delayAfterSequence);
+        activeTimeouts.push(timeout);
+      }
+      if (settings.highlightSimultaneously)
+        highlightAllBalls(afterHighlight);
+      else
+        highlightNextBall(afterHighlight);
+    }
+
+    function freezeBalls() {
+      for (let ball of balls) {
+        ball.userData.velocity.set(0, 0, 0);
+      }
+    }
+
+    function labelBalls() {
+      if (!['labels', 'labels_no_rotate'].includes(settings.answerStyle)) {
+        return;
+      }
+      const orderedBalls = balls.slice().sort((a, b) => {
+        const aLayer = Math.round(a.position.y / 8) * 8;
+        const bLayer = Math.round(b.position.y / 8) * 8;
+        if (aLayer !== bLayer) {
+          return bLayer - aLayer;
+        }
+        if (a.position.x !== b.position.x) {
+          return a.position.x - b.position.x;
+        }
+        return a.position.z - b.position.z;
+      });
+
+      for (let i = 0; i < Math.min(INPUT_HOTKEYS.length, balls.length); i++) {
+        addHotkeyLabel(orderedBalls[i], INPUT_HOTKEYS[i][0]);
+      }
+      const xSum = balls.map(ball => ball.position.x).reduce((a, b) => a + b, 0);
+      if (xSum < 0) {
+        panAngleDx = -Math.abs(panAngleDx);
+      }
+    }
+
+    function addHotkeyLabel(ball, hotkeyText) {
+      if (!loadedFont) return;
+
+      const textSize = settings.ballRadius;
+      const text = new Text();
+      text.text = hotkeyText;
+      text.fontSize = textSize;
+      text.color = 0xffffff;
+      text.outlineWidth = textSize * 0.06;
+      text.anchorX = "center";
+      text.anchorY = "middle";
+      text.position.set(0, 0, settings.ballRadius * 1.2);
+
+      text.renderOrder = 999;
+      text.material = new THREE.MeshBasicMaterial({
+        color: 0xffffff,
+        depthTest: false,
+      });
+      text.sync();
+      ball.add(text);
+      ball.userData.hotkey = hotkeyText;
+    }
+
+    function onDocumentMouseDown(event) {
+      if (!isUserTurn) {
+        if (!isSequenceShowing) {
+          // During delay period
+          messageElement.textContent = 'Please wait...';
+          let timeout = setTimeout(() => {
+            if (messageElement.textContent === 'Please wait...') {
+              messageElement.textContent = '';
+            }
+          }, 1000); // Clear the message after 1 second
+          activeTimeouts.push(timeout);
+        }
+        return;
+      }
+
+      event.preventDefault();
+
+      // Calculate mouse position
+      const rect = renderer.domElement.getBoundingClientRect();
+      mouse.x = ((event.clientX - rect.left) / rect.width) * 2 - 1;
+      mouse.y = - ((event.clientY - rect.top) / rect.height) * 2 + 1;
+
+      // Raycasting
+      raycaster.setFromCamera(mouse, camera);
+      const intersects = raycaster.intersectObjects(balls, true); // Include descendants
+
+      if (intersects.length > 0) {
+        const selectedObject = intersects[0].object;
+        const parentBall = selectedObject.parent.type === 'Mesh' ? selectedObject.parent : selectedObject;
+
+        if (selectedBalls.includes(parentBall)) return;
+
+        selectedBalls.push(parentBall);
+        userSequence.push(parentBall);
+
+        const isTarget = targetBalls.includes(parentBall);
+        if (isTarget) {
+          parentBall.material.color.set(YELLOW); // Turn yellow
+        } else {
+          parentBall.material.color.set(settings.answerFeedback === 'Immediate' ? RED : YELLOW); // Turn red
+        }
+
+        if (userSequence.length === targetSequence.length) {
+          isUserTurn = false;
+          checkUserSequence();
+        }
+      }
+    }
+
+    function handleHotkey(typedText) {
+      if (!isUserTurn) {
+        return;
+      }
+
+      for (const ball of balls) {
+        if (ball.userData.hotkey === typedText && !selectedBalls.includes(ball)) {
+          selectedBalls.push(ball);
+          userSequence.push(ball);
+          if (targetBalls.includes(ball)) {
+            ball.material.color.set(YELLOW); // Turn yellow
+          } else {
+            ball.material.color.set(settings.answerFeedback === 'Immediate' ? RED : YELLOW); // Turn red
+          }
+        }
+      }
+
+      if (userSequence.length === targetSequence.length) {
+        isUserTurn = false;
+        checkUserSequence();
+      }
+    }
+
+    function checkUserSequence() {
+      let allTargetsSelected = targetBalls.every(ball => userSequence.includes(ball));
+      let includedDistractor = userSequence.some(ball => !targetBalls.includes(ball));
+
+      if (allTargetsSelected && !includedDistractor) {
+        cumulativeScore += settings.level;
+        cumulativeCorrectSelections += targetBalls.length;
+
+        messageElement.textContent = 'Correct!';
+        correctAnswersCount++;
+        incorrectAnswersCount = 0; // Reset incorrect count
+
+        if (settings.autoProgression) {
+          adjustSettingsBasedOnPerformance(true);
+        }
+        
+        saveTrialData(settings.level);
+
+        // Notify parent hub that round is complete
+        if (window.parent !== window) {
+          window.parent.postMessage({ type: 'ROUND_COMPLETE', result: 'correct' }, '*');
+        }
+
+        let timeout = setTimeout(startGame, settings.trialEndDelay);
+        activeTimeouts.push(timeout);
+      } else {
+        // The user is incorrect
+        cumulativeScore += Math.max(settings.level - 1, 0);
+        cumulativeCorrectSelections += userSequence.filter(ball => targetBalls.includes(ball)).length;
+
+        messageElement.textContent = 'Incorrect selection.';
+        incorrectAnswersCount++;
+        correctAnswersCount = 0; // Reset correct count
+
+        showCorrectSequence();
+        if (settings.autoProgression) {
+          adjustSettingsBasedOnPerformance(false);
+        }
+
+        // Save trial data
+        saveTrialData(trialScores[trialScores.length - 1]);
+
+        // Notify parent hub that round is complete
+        if (window.parent !== window) {
+          window.parent.postMessage({ type: 'ROUND_COMPLETE', result: 'incorrect' }, '*');
+        }
+
+        let timeout = setTimeout(startGame, settings.trialEndDelay);
+        activeTimeouts.push(timeout);
+      }
+    }
+
+    function handleIncorrectSelection(trialScore) {
+      showCorrectSequence();
+      messageElement.textContent = 'Incorrect sequence.';
+
+      incorrectAnswersCount++;
+      correctAnswersCount = 0; // Reset correct count
+
+      if (settings.autoProgression) {
+        adjustSettingsBasedOnPerformance(false);
+      }
+
+      // Save trial data
+      saveTrialData(trialScore);
+
+      let timeout = setTimeout(startGame, settings.trialEndDelay);
+      activeTimeouts.push(timeout);
+    }
+
+    function saveTrialData(trialScore) {
+      // Save score for this trial
+      trialScores.push(trialScore);
+
+      // Calculate accuracy for this trial
+      const trialAccuracy = (userSequence.filter(ball => targetBalls.includes(ball)).length / targetSequence.length) * 100;
+      trialAccuracies.push(trialAccuracy);
+
+      // Update average after every trial
+      updateAverageDisplay();
+
+      // Save daily progress
+      saveDailyProgress(trialScore);
+    }
+
+    function updateAverageDisplay() {
+      const totalScore = trialScores.reduce((a, b) => a + b, 0);
+      const averageScore = totalScore / trialScores.length;
+
+      const totalAccuracy = trialAccuracies.reduce((a, b) => a + b, 0);
+      const averageAccuracy = totalAccuracy / trialAccuracies.length;
+
+      averageDisplayElement.querySelector('span').textContent = `Avg Accuracy: ${averageAccuracy.toFixed(2)}%`;
+    }
+
+    function calculateScores() {
+      const totalScore = trialScores.reduce((a, b) => a + b, 0);
+      const averageScore = totalScore / trialScores.length;
+      const averageAccuracy = (cumulativeCorrectSelections / cumulativeTotalTargets) * 100;
+      return [totalScore, averageScore, averageAccuracy];
+    }
+
+    function saveDailyProgress(trialScore) {
+      const now = new Date();
+      const year = now.getFullYear();
+      const month = String(now.getMonth() + 1).padStart(2, '0');
+      const day = String(now.getDate()).padStart(2, '0');
+      const today = `${year}-${month}-${day}`;
+      const progressData = JSON.parse(localStorage.getItem('progressData')) || [];
+
+      // Calculate average score and accuracy
+      let [totalScore, averageScore, averageAccuracy] = calculateScores();
+
+      // Check if data for today already exists
+      const todayDataIndex = progressData.findIndex(data => data.date === today);
+
+      if (todayDataIndex >= 0) {
+        // Update existing data
+        const existingData = progressData[todayDataIndex];
+        // Create a session data object for the current session
+        const sessionData = {
+          sessionId: sessionId,
+          sessionAverageScore: averageScore,
+          sessionAverageAccuracy: averageAccuracy,
+          sessionMaxScore: trialScore,
+          sessionTrialsCompleted: trialScores.length
+        };
+
+
+        // If no sessions array exists for today, create it
+        if (!existingData.sessions) {
+          existingData.sessions = [];
+        }
+
+        // Check if a session with the current sessionId already exists for today
+        let existingSessionIndex = existingData.sessions.findIndex(s => s.sessionId === sessionId);
+
+        if (existingSessionIndex >= 0) {
+          // Update the existing session for this sessionId
+          let existingSession = existingData.sessions[existingSessionIndex];
+          existingSession.sessionAverageScore = averageScore;
+          existingSession.sessionAverageAccuracy = averageAccuracy;
+          existingSession.sessionMaxScore = Math.max(existingSession.sessionMaxScore, trialScore);
+          existingSession.sessionTrialsCompleted = trialScores.length;
+        } else {
+          // Add a new session for this sessionId
+          existingData.sessions.push(sessionData);
+        }
+
+
+
+        // Recalculate daily aggregates from all sessions of today
+        const totalSessions = existingData.sessions.length;
+
+        const dailyAvgScore = existingData.sessions.reduce((sum, s) => sum + s.sessionAverageScore, 0) / totalSessions;
+        const dailyAvgAccuracy = existingData.sessions.reduce((sum, s) => sum + s.sessionAverageAccuracy, 0) / totalSessions;
+        const dailyMaxScore = Math.max(...existingData.sessions.map(s => s.sessionMaxScore));
+        const dailyTrialsCompleted = existingData.sessions.reduce((sum, s) => sum + s.sessionTrialsCompleted, 0);
+
+        existingData.averageScore = dailyAvgScore;
+        existingData.averageAccuracy = dailyAvgAccuracy;
+        existingData.maxScore = dailyMaxScore;
+        existingData.trialsCompleted = dailyTrialsCompleted;
+
+      } else {
+        // Add new data
+        trialScores.splice(0, trialScores.length - 1);
+        [totalScore, averageScore, averageAccuracy] = calculateScores();
+        progressData.push({
+        date: today,
+        sessions: [{
+          sessionAverageScore: averageScore,
+          sessionAverageAccuracy: averageAccuracy,
+          sessionMaxScore: trialScore,
+          sessionTrialsCompleted: trialScores.length
+        }],
+        averageScore: averageScore,
+        averageAccuracy: averageAccuracy,
+        maxScore: trialScore,
+        trialsCompleted: trialScores.length
+      });
+
+      }
+
+      // Save back to localStorage
+      localStorage.setItem('progressData', JSON.stringify(progressData));
+    }
+
+    function renderProgressChart() {
+      const ctx = document.getElementById('progress-chart').getContext('2d');
+
+      // Retrieve data from localStorage
+      const progressData = JSON.parse(localStorage.getItem('progressData')) || [];
+
+      const labels = progressData.map(data => data.date);
+      const scores = progressData.map(data => data.averageScore);
+      const accuracies = progressData.map(data => data.averageAccuracy);
+      const maxScores = progressData.map(data => data.maxScore);
+      const trialsCompleted = progressData.map(data => data.trialsCompleted);
+
+      // Destroy existing chart instance if it exists
+      if (window.myLineChart) {
+        window.myLineChart.destroy();
+      }
+
+      window.myLineChart = new Chart(ctx, {
+        type: 'line',
+        data: {
+          labels: labels,
+          datasets: [{
+            label: 'Average Score',
+            data: scores,
+            borderColor: 'rgba(75, 192, 192, 1)',
+            fill: false,
+            yAxisID: 'y-axis-1',
+          }, {
+            label: 'Average Accuracy (%)',
+            data: accuracies,
+            borderColor: 'rgba(255, 99, 132, 1)',
+            fill: false,
+            yAxisID: 'y-axis-2',
+          }, {
+            label: 'Max Score',
+            data: maxScores,
+            borderColor: 'rgba(255, 206, 86, 1)',
+            fill: false,
+            yAxisID: 'y-axis-1', // Same axis as average score
+          }, {
+            label: 'Trials Completed',
+            data: trialsCompleted,
+            borderColor: 'rgba(153, 102, 255, 1)',
+            fill: false,
+            yAxisID: 'y-axis-3',
+          }]
+        },
+        options: {
+          scales: {
+            yAxes: [{
+              type: 'linear',
+              position: 'left',
+              id: 'y-axis-1',
+              ticks: {
+                beginAtZero: true,
+                suggestedMax: Math.max(...maxScores) + 2
+              },
+              scaleLabel: {
+                display: true,
+                labelString: 'Score'
+              }
+            }, {
+              type: 'linear',
+              position: 'right',
+              id: 'y-axis-2',
+              ticks: {
+                max: 100,
+                min: 0
+              },
+              gridLines: {
+                drawOnChartArea: false,
+              },
+              scaleLabel: {
+                display: true,
+                labelString: 'Accuracy (%)'
+              }
+            }, {
+              type: 'linear',
+              position: 'right',
+              id: 'y-axis-3',
+              ticks: {
+                beginAtZero: true,
+                suggestedMax: Math.max(...trialsCompleted) + 2
+              },
+              gridLines: {
+                drawOnChartArea: false,
+              },
+              scaleLabel: {
+                display: true,
+                labelString: 'Trials Completed'
+              }
+            }]
+          }
+        }
+      });
+    }
+
+    function adjustSettingsBasedOnPerformance(isCorrect) {
+      if (isCorrect) {
+        // Correct Answer Adjustments
+        if (correctAnswersCount % settings.everyCorrectLevel === 0) {
+          settings.level += settings.levelChangeByCorrect;
+          settings.level = Math.max(1, settings.level);
+        }
+        if (settings.ballSpeedChangeByCorrect !== 0 && correctAnswersCount % settings.everyCorrectBallSpeed === 0) {
+          settings.ballSpeed += settings.ballSpeedChangeByCorrect;
+        }
+        if (settings.highlightDurationChangeByCorrect !== 0 && correctAnswersCount % settings.everyCorrectHighlightDuration === 0) {
+          settings.highlightDuration += settings.highlightDurationChangeByCorrect;
+        }
+        if (settings.delayAfterChangeByCorrect !== 0 && correctAnswersCount % settings.everyCorrectDelayAfter === 0) {
+          settings.delayAfterSequence += settings.delayAfterChangeByCorrect;
+        }
+      } else {
+        // Incorrect Answer Adjustments
+        if (incorrectAnswersCount % settings.everyIncorrectLevel === 0) {
+          settings.level += settings.levelChangeByIncorrect;
+          settings.level = Math.max(1, settings.level);
+        }
+        if (settings.ballSpeedChangeByIncorrect !== 0 && incorrectAnswersCount % settings.everyIncorrectBallSpeed === 0) {
+          settings.ballSpeed += settings.ballSpeedChangeByIncorrect;
+          settings.ballSpeed = Math.max(0, settings.ballSpeed);
+        }
+        if (settings.highlightDurationChangeByIncorrect !== 0 && incorrectAnswersCount % settings.everyIncorrectHighlightDuration === 0) {
+          settings.highlightDuration += settings.highlightDurationChangeByIncorrect;
+          settings.highlightDuration = Math.max(0, settings.highlightDuration);
+        }
+        if (settings.delayAfterChangeByIncorrect !== 0 && incorrectAnswersCount % settings.everyIncorrectDelayAfter === 0) {
+          settings.delayAfterSequence += settings.delayAfterChangeByIncorrect;
+          settings.delayAfterSequence = Math.max(0, settings.delayAfterSequence);
+        }
+      }
+      repopulateGui();
+      saveSettings();
+    }
+
+    function showCorrectSequence() {
+      for (let i = 0; i < targetSequence.length; i++) {
+        let target = targetSequence[i];
+        if (!userSequence.includes(target.ball))
+          target.ball.material.color.set(GREEN); // Turn green
+      }
+
+      for (const userSelectedBall of userSequence) {
+        if (!targetBalls.includes(userSelectedBall)) {
+          userSelectedBall.material.color.set(RED); // Turn red
+        }
+      }
+    }
+
+    function onWindowResize() {
+      camera.aspect = window.innerWidth / window.innerHeight;
+      camera.updateProjectionMatrix();
+
+      renderer.setSize(window.innerWidth, window.innerHeight);
+      anaglyphEffect.setSize(window.innerWidth, window.innerHeight);
+    }
+
+    function updateFpsStats() {
+      if (settings.showFpsStats && !stats) {
+        stats = new Stats();
+        gameContainer.appendChild(stats.dom);
+      } else if (!settings.showFpsStats && stats) {
+        gameContainer.removeChild(stats.dom);
+        stats = null;
+      }
+    }
+
+    function updateFpsSettings() {
+      if (settings.useFps) {
+        fpsInterval = 1000 / settings.fps;
+        fpsMultiplier = fpsInterval * FRAME_ADJUSTMENT;
+      } else {
+        fpsInterval = null;
+        fpsMultiplier = null;
+      }
+    }
+
+    function animate() {
+      if (fpsInterval) {
+        animateThrottled();
+        return;
+      }
+      stats?.begin();
+      const now = performance.now();
+      const delta = now - then;
+      then = now;
+      controls.update();
+      updateGame(delta * FRAME_ADJUSTMENT);
+      render();
+    }
+
+    function animateThrottled() {
+      const now = performance.now();
+      const delta = now - then;
+
+      if (delta > fpsInterval) {
+          then = now - (delta % fpsInterval);
+          controls.update();
+          updateGame(Math.floor(delta/fpsInterval) * fpsMultiplier);
+          render();
+      }
+    }
+
+    function render() {
+        if (settings.use3DGlasses) {
+          anaglyphEffect.render(scene, camera);
+        } else {
+          renderer.render(scene, camera);
+        }
+        stats?.end();
+    }
+
+    function updateGame(delta) {
+      // Update balls position
+      if (!isUserTurn) {
+        updateBallPositions(delta);
+      } else {
+        updateBallLabels(delta);
+      }
+
+      if (isUserTurn && !settings.screenRotation && settings.answerStyle === 'labels') {
+        const angleLimit = 0.35
+        panAngle += panAngleDx * delta;
+        if (panAngle < -angleLimit) {
+          panAngleDx = Math.abs(panAngleDx);
+          panAngle = -angleLimit + panAngleDx * delta;
+        } else if (panAngle > angleLimit) {
+          panAngleDx = -Math.abs(panAngleDx);
+          panAngle = angleLimit + panAngleDx * delta;
+        }
+        const r = Math.sqrt(camera.position.x ** 2 + camera.position.z ** 2)
+        const x = r * Math.sin(panAngle);
+        const z = r * Math.cos(panAngle);
+        camera.position.set(x, camera.position.y, z);
+        camera.lookAt(0, 0, 0);
+      }
+
+      // Screen Rotation
+      if (settings.screenRotation) {
+        screenRotationAngle += settings.screenRotationSpeed * delta;
+        let radius = settings.screenRotationDistance;
+
+        // Adjust radius if varyRotationDistance is enabled
+        if (settings.varyRotationDistance) {
+          radius += Math.sin(screenRotationAngle * 0.5) * 10; // Change 10 to adjust the variance
+        }
+
+        // Calculate camera position to maintain constant distance
+        let x = camera.position.x;
+        let y = camera.position.y;
+        let z = camera.position.z;
+
+        if (settings.rotateX && settings.rotateY && settings.rotateZ) {
+          // Rotate around all axes while keeping constant distance
+          const theta = screenRotationAngle; // Horizontal angle
+          const phi = Math.acos(Math.sin(screenRotationAngle * 0.7)); // Vertical angle
+          x = radius * Math.sin(phi) * Math.cos(theta);
+          y = radius * Math.cos(phi);
+          z = radius * Math.sin(phi) * Math.sin(theta);
+        } else {
+          // Handle individual axis rotations
+          let position = new THREE.Vector3();
+          if (settings.rotateX) {
+            position.x = radius * Math.sin(screenRotationAngle);
+          } else {
+            position.x = camera.position.x;
+          }
+          if (settings.rotateY) {
+            position.y = radius * Math.sin(screenRotationAngle * 0.7);
+          } else {
+            position.y = camera.position.y;
+          }
+          if (settings.rotateZ) {
+            position.z = radius * Math.cos(screenRotationAngle);
+          } else {
+            position.z = camera.position.z;
+          }
+          x = position.x;
+          y = position.y;
+          z = position.z;
+        }
+
+        camera.position.set(x, y, z);
+        camera.lookAt(scene.position);
+      }
+    }
+
+    function updateBallLabels(delta) {
+      for (const ball of balls) {
+        ball.children.forEach(child => {
+          if (child instanceof Text) {
+            child.lookAt(camera.position);
+          }
+        })
+      }
+    }
+
+    function updateBallPositions(delta) {
+      for (let ball of balls) {
+        ball.position.add(ball.userData.velocity.clone().multiplyScalar(delta));
+
+        // Bounce off walls
+        const halfX = settings.boxX / 2 - 2;
+        const halfY = settings.boxY / 2 - 2;
+        const halfZ = settings.boxZ / 2 - 2;
+        if (ball.position.x > halfX || ball.position.x < -halfX) {
+          const needsFlip = (ball.position.x > halfX && ball.userData.velocity.x > 0) || (ball.position.x < -halfX && ball.userData.velocity.x < 0);
+          if (needsFlip)
+            ball.userData.velocity.x *= -1;
+          ball.position.x = THREE.MathUtils.clamp(ball.position.x, -halfX, halfX);
+        }
+        if (ball.position.y > halfY || ball.position.y < -halfY) {
+          const needsFlip = (ball.position.y > halfY && ball.userData.velocity.y > 0) || (ball.position.y < -halfY && ball.userData.velocity.y < 0);
+          if (needsFlip)
+            ball.userData.velocity.y *= -1;
+          ball.position.y = THREE.MathUtils.clamp(ball.position.y, -halfY, halfY);
+        }
+        if (ball.position.z > halfZ || ball.position.z < -halfZ) {
+          const needsFlip = (ball.position.z > halfZ && ball.userData.velocity.z > 0) || (ball.position.z < -halfZ && ball.userData.velocity.z < 0);
+          if (needsFlip)
+            ball.userData.velocity.z *= -1;
+          ball.position.z = THREE.MathUtils.clamp(ball.position.z, -halfZ, halfZ);
+        }
+
+        if (settings.divider === 'vertical' && Math.abs(ball.position.x) - settings.ballRadius < settings.dividerWidth) {
+          const sign = Math.sign(ball.position.x);
+          if (ball.userData.velocity.x * sign < 0) {
+            ball.userData.velocity.x *= -1
+          }
+        }
+      }
+
+      // Check for collisions
+      for (let i = 0; i < balls.length; i++) {
+        for (let j = i + 1; j < balls.length; j++) {
+          const ball1 = balls[i];
+          const ball2 = balls[j];
+
+          const pos1 = ball1.position;
+          const pos2 = ball2.position;
+
+          const distance = pos1.distanceTo(pos2);
+          const minDist = 2.2 * settings.ballRadius; // Sum of ball radius
+
+          if (distance < minDist) {
+            // Collision normal
+            const normal = pos1.clone().sub(pos2).normalize();
+
+            // Velocities
+            const v1 = ball1.userData.velocity;
+            const v2 = ball2.userData.velocity;
+
+            // Compute velocity along the normal
+            const v1n = normal.clone().multiplyScalar(v1.dot(normal));
+            const v2n = normal.clone().multiplyScalar(v2.dot(normal));
+
+            // Compute velocity along the tangent (which stays unchanged)
+            const v1t = v1.clone().sub(v1n);
+            const v2t = v2.clone().sub(v2n);
+
+            // Compute total kinetic energy in the normal direction
+            const v1nMag = v1n.length();
+            const v2nMag = v2n.length();
+            const totalEnergy = v1nMag ** 2 + v2nMag ** 2; // Squared speeds (energy)
+
+            // Compute new normal speeds while keeping total energy the same
+            const avgSpeed = Math.sqrt(totalEnergy / 2); // Each gets a balanced share
+            const v1nAfter = normal.clone().multiplyScalar(avgSpeed * Math.sign(v2n.dot(normal)));
+            const v2nAfter = normal.clone().multiplyScalar(avgSpeed * Math.sign(v1n.dot(normal)));
+
+            // Compute final velocities
+            const v1Final = v1t.add(v1nAfter);
+            const v2Final = v2t.add(v2nAfter);
+
+            // Update velocities
+            ball1.userData.velocity.copy(v1Final);
+            ball2.userData.velocity.copy(v2Final);
+
+            // Move balls apart to prevent overlap
+            const overlap = (minDist - distance) / 2;
+            ball1.position.add(normal.clone().multiplyScalar(overlap * delta));
+            ball2.position.sub(normal.clone().multiplyScalar(overlap * delta));
+          }
+        }
+      }
+    }
+
+    // Utility Functions
+    function shuffleArray(array) {
+      for (let i = array.length - 1; i > 0; i--) {
+        const j = Math.floor(Math.random() * (i + 1));
+        [array[i], array[j]] = [array[j], array[i]];
+      }
+      return array;
+    }
+
+    function getRandomColor(excludeColors) {
+      let color;
+      do {
+        color = Math.floor(Math.random() * 0xffffff);
+      } while (excludeColors.includes(color));
+      return color;
+    }
+
+    function getRandomInRange(min, max) {
+      return Math.random() * (max - min) + min;
+    }
+
+  </script>
+</body>
+</html>

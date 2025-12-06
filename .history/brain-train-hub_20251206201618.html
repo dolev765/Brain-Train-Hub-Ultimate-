@@ -1,0 +1,3484 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Brain Train Hub</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@400;700;900&family=Rajdhani:wght@400;500;600;700&display=swap" rel="stylesheet">
+  <style>
+    :root {
+      --bg-dark: #0a0a0f;
+      --bg-card: #12121a;
+      --bg-card-hover: #1a1a25;
+      --accent-cyan: #00f0ff;
+      --accent-magenta: #ff00aa;
+      --accent-yellow: #ffcc00;
+      --accent-green: #00ff88;
+      --text-primary: #ffffff;
+      --text-secondary: #8888aa;
+      --border-color: #2a2a3a;
+      --glow-cyan: 0 0 20px rgba(0, 240, 255, 0.5);
+      --glow-magenta: 0 0 20px rgba(255, 0, 170, 0.5);
+    }
+
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+    }
+
+    body {
+      font-family: 'Rajdhani', sans-serif;
+      background: var(--bg-dark);
+      color: var(--text-primary);
+      min-height: 100vh;
+      overflow-x: hidden;
+    }
+
+    /* Animated background */
+    .bg-grid {
+      position: fixed;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      background-image: 
+        linear-gradient(rgba(0, 240, 255, 0.03) 1px, transparent 1px),
+        linear-gradient(90deg, rgba(0, 240, 255, 0.03) 1px, transparent 1px);
+      background-size: 50px 50px;
+      pointer-events: none;
+      z-index: -1;
+    }
+
+    /* Selection Screen */
+    #selection-screen {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      padding: 40px 20px;
+      min-height: 100vh;
+    }
+
+    .hub-title {
+      font-family: 'Orbitron', sans-serif;
+      font-size: 3.5rem;
+      font-weight: 900;
+      text-transform: uppercase;
+      letter-spacing: 8px;
+      margin-bottom: 10px;
+      background: linear-gradient(135deg, var(--accent-cyan), var(--accent-magenta));
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+      background-clip: text;
+      text-shadow: var(--glow-cyan);
+      animation: titlePulse 3s ease-in-out infinite;
+    }
+
+    @keyframes titlePulse {
+      0%, 100% { filter: brightness(1); }
+      50% { filter: brightness(1.2); }
+    }
+
+    .hub-subtitle {
+      font-size: 1.2rem;
+      color: var(--text-secondary);
+      letter-spacing: 4px;
+      margin-bottom: 50px;
+    }
+
+    .games-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+      gap: 20px;
+      max-width: 1200px;
+      width: 100%;
+      margin-bottom: 40px;
+    }
+
+    .game-card {
+      background: var(--bg-card);
+      border: 1px solid var(--border-color);
+      border-radius: 12px;
+      padding: 25px;
+      cursor: pointer;
+      transition: all 0.3s ease;
+      position: relative;
+      overflow: hidden;
+    }
+
+    .game-card::before {
+      content: '';
+      position: absolute;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 3px;
+      background: linear-gradient(90deg, var(--accent-cyan), var(--accent-magenta));
+      transform: scaleX(0);
+      transition: transform 0.3s ease;
+    }
+
+    .game-card:hover {
+      background: var(--bg-card-hover);
+      transform: translateY(-5px);
+      box-shadow: var(--glow-cyan);
+    }
+
+    .game-card:hover::before {
+      transform: scaleX(1);
+    }
+
+    .game-card.selected {
+      border-color: var(--accent-cyan);
+      box-shadow: var(--glow-cyan);
+    }
+
+    .game-card.selected::before {
+      transform: scaleX(1);
+    }
+
+    .game-checkbox {
+      position: absolute;
+      top: 15px;
+      right: 15px;
+      width: 24px;
+      height: 24px;
+      border: 2px solid var(--border-color);
+      border-radius: 6px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      transition: all 0.3s ease;
+    }
+
+    .game-card.selected .game-checkbox {
+      background: var(--accent-cyan);
+      border-color: var(--accent-cyan);
+    }
+
+    .game-checkbox::after {
+      content: '✓';
+      color: var(--bg-dark);
+      font-weight: bold;
+      opacity: 0;
+      transition: opacity 0.2s ease;
+    }
+
+    .game-card.selected .game-checkbox::after {
+      opacity: 1;
+    }
+
+    .game-icon {
+      font-size: 3rem;
+      margin-bottom: 15px;
+    }
+
+    .game-name {
+      font-family: 'Orbitron', sans-serif;
+      font-size: 1.3rem;
+      font-weight: 700;
+      margin-bottom: 8px;
+      color: var(--text-primary);
+    }
+
+    .game-description {
+      font-size: 0.95rem;
+      color: var(--text-secondary);
+      line-height: 1.5;
+    }
+
+    .start-button {
+      font-family: 'Orbitron', sans-serif;
+      font-size: 1.4rem;
+      font-weight: 700;
+      padding: 18px 60px;
+      background: linear-gradient(135deg, var(--accent-cyan), var(--accent-magenta));
+      color: var(--bg-dark);
+      border: none;
+      border-radius: 50px;
+      cursor: pointer;
+      text-transform: uppercase;
+      letter-spacing: 3px;
+      transition: all 0.3s ease;
+      margin-top: 20px;
+    }
+
+    .start-button:hover:not(:disabled) {
+      transform: scale(1.05);
+      box-shadow: var(--glow-cyan), var(--glow-magenta);
+    }
+
+    .start-button:disabled {
+      opacity: 0.5;
+      cursor: not-allowed;
+    }
+
+    .selection-count {
+      font-size: 1.1rem;
+      color: var(--text-secondary);
+      margin-top: 15px;
+    }
+
+    .selection-count span {
+      color: var(--accent-cyan);
+      font-weight: 600;
+    }
+
+    /* Game Screen */
+    #game-screen {
+      display: none;
+      position: fixed;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      background: var(--bg-dark);
+    }
+
+    .game-header {
+      position: absolute;
+      top: 0;
+      left: 0;
+      right: 0;
+      height: 60px;
+      background: linear-gradient(180deg, rgba(10, 10, 15, 0.95), rgba(10, 10, 15, 0.8));
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 0 20px;
+      z-index: 100;
+      border-bottom: 1px solid var(--border-color);
+    }
+
+    .current-game-info {
+      display: flex;
+      align-items: center;
+      gap: 20px;
+    }
+
+    .current-game-name {
+      font-family: 'Orbitron', sans-serif;
+      font-size: 1.2rem;
+      color: var(--accent-cyan);
+    }
+
+    .round-indicator {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      font-size: 1rem;
+    }
+
+    .round-dot {
+      width: 12px;
+      height: 12px;
+      border-radius: 50%;
+      background: var(--border-color);
+      transition: all 0.3s ease;
+    }
+
+    .round-dot.completed {
+      background: var(--accent-green);
+      box-shadow: 0 0 10px var(--accent-green);
+    }
+
+    .round-dot.current {
+      background: var(--accent-yellow);
+      box-shadow: 0 0 10px var(--accent-yellow);
+      animation: roundPulse 1s ease-in-out infinite;
+    }
+
+    @keyframes roundPulse {
+      0%, 100% { transform: scale(1); }
+      50% { transform: scale(1.3); }
+    }
+
+    .progress-info {
+      display: flex;
+      align-items: center;
+      gap: 30px;
+    }
+
+    .games-progress {
+      font-size: 0.95rem;
+      color: var(--text-secondary);
+    }
+
+    .games-progress span {
+      color: var(--accent-magenta);
+      font-weight: 600;
+    }
+
+    .exit-button {
+      font-family: 'Rajdhani', sans-serif;
+      font-size: 1rem;
+      font-weight: 600;
+      padding: 8px 20px;
+      background: transparent;
+      color: var(--text-secondary);
+      border: 1px solid var(--border-color);
+      border-radius: 20px;
+      cursor: pointer;
+      transition: all 0.3s ease;
+    }
+
+    .exit-button:hover {
+      color: var(--accent-magenta);
+      border-color: var(--accent-magenta);
+    }
+
+    .game-iframe-container {
+      position: absolute;
+      top: 60px;
+      left: 0;
+      right: 0;
+      bottom: 0;
+      transition: right 0.3s ease;
+    }
+    
+    .game-iframe-container.with-reinforcement {
+      right: 320px;
+    }
+
+    .game-iframe {
+      width: 100%;
+      height: 100%;
+      border: none;
+    }
+    
+    /* Reinforcement Side Panel */
+    #reinforcement-panel {
+      position: fixed;
+      top: 60px;
+      right: -320px;
+      width: 320px;
+      height: calc(100vh - 60px);
+      background: linear-gradient(180deg, var(--bg-card) 0%, var(--bg-dark) 100%);
+      border-left: 3px solid var(--accent-magenta);
+      z-index: 150;
+      transition: right 0.4s ease;
+      overflow-y: auto;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      padding: 15px;
+      box-shadow: -10px 0 30px rgba(0, 0, 0, 0.7);
+    }
+    
+    #reinforcement-panel.visible {
+      right: 0;
+    }
+    
+    .reinforcement-image-container {
+      position: relative;
+      width: 100%;
+      margin-bottom: 15px;
+      border-radius: 12px;
+      overflow: hidden;
+      border: 3px solid var(--border-color);
+      background: var(--bg-dark);
+      animation: fadeIn 0.5s ease;
+    }
+    
+    .reinforcement-image-container.positive {
+      border-color: #00ff88;
+      box-shadow: 0 0 20px rgba(0, 255, 136, 0.4);
+    }
+    
+    .reinforcement-image-container.negative {
+      border-color: #ff4444;
+      box-shadow: 0 0 20px rgba(255, 68, 68, 0.4);
+    }
+    
+    @keyframes fadeIn {
+      from { opacity: 0; transform: scale(0.9); }
+      to { opacity: 1; transform: scale(1); }
+    }
+    
+    .reinforcement-image-container.positive {
+      border-color: var(--accent-green);
+      box-shadow: 0 0 20px rgba(0, 255, 136, 0.3);
+    }
+    
+    .reinforcement-image-container.negative {
+      border-color: var(--accent-magenta);
+      box-shadow: 0 0 20px rgba(255, 0, 170, 0.3);
+    }
+    
+    .reinforcement-image {
+      width: 100%;
+      height: auto;
+      display: block;
+      object-fit: contain;
+      max-height: 400px;
+    }
+    
+    @keyframes slideInRight {
+      from {
+        transform: translateX(100%);
+        opacity: 0;
+      }
+      to {
+        transform: translateX(0);
+        opacity: 1;
+      }
+    }
+
+    /* Transition Overlay */
+    #transition-overlay {
+      display: none;
+      position: fixed;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      background: rgba(10, 10, 15, 0.95);
+      z-index: 200;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+    }
+
+    .transition-content {
+      text-align: center;
+    }
+
+    .transition-title {
+      font-family: 'Orbitron', sans-serif;
+      font-size: 1.5rem;
+      color: var(--text-secondary);
+      margin-bottom: 20px;
+      letter-spacing: 3px;
+    }
+
+    .transition-game-name {
+      font-family: 'Orbitron', sans-serif;
+      font-size: 3rem;
+      font-weight: 900;
+      background: linear-gradient(135deg, var(--accent-cyan), var(--accent-magenta));
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+      background-clip: text;
+      margin-bottom: 30px;
+      animation: textGlow 2s ease-in-out infinite;
+    }
+
+    @keyframes textGlow {
+      0%, 100% { filter: brightness(1); }
+      50% { filter: brightness(1.3); }
+    }
+
+    .transition-countdown {
+      font-family: 'Orbitron', sans-serif;
+      font-size: 8rem;
+      font-weight: 900;
+      color: var(--accent-cyan);
+      text-shadow: var(--glow-cyan);
+      animation: countdownScale 1s ease-in-out;
+    }
+
+    @keyframes countdownScale {
+      0% { transform: scale(1.5); opacity: 0; }
+      50% { transform: scale(1); opacity: 1; }
+      100% { transform: scale(0.9); opacity: 0.8; }
+    }
+
+    /* Complete Screen */
+    #complete-screen {
+      display: none;
+      position: fixed;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      background: var(--bg-dark);
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      z-index: 300;
+    }
+
+    .complete-title {
+      font-family: 'Orbitron', sans-serif;
+      font-size: 4rem;
+      font-weight: 900;
+      background: linear-gradient(135deg, var(--accent-green), var(--accent-cyan));
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+      background-clip: text;
+      margin-bottom: 20px;
+    }
+
+    .complete-stats {
+      font-size: 1.5rem;
+      color: var(--text-secondary);
+      margin-bottom: 40px;
+    }
+
+    .complete-stats span {
+      color: var(--accent-cyan);
+    }
+
+    .restart-button {
+      font-family: 'Orbitron', sans-serif;
+      font-size: 1.2rem;
+      font-weight: 700;
+      padding: 15px 50px;
+      background: linear-gradient(135deg, var(--accent-cyan), var(--accent-green));
+      color: var(--bg-dark);
+      border: none;
+      border-radius: 50px;
+      cursor: pointer;
+      text-transform: uppercase;
+      letter-spacing: 2px;
+      transition: all 0.3s ease;
+    }
+
+    .restart-button:hover {
+      transform: scale(1.05);
+      box-shadow: 0 0 30px rgba(0, 255, 136, 0.5);
+    }
+
+    /* Manual Round Complete Button */
+    .round-complete-btn {
+      position: fixed;
+      bottom: 20px;
+      right: 20px;
+      font-family: 'Rajdhani', sans-serif;
+      font-size: 0.9rem;
+      font-weight: 600;
+      padding: 10px 20px;
+      background: var(--accent-yellow);
+      color: var(--bg-dark);
+      border: none;
+      border-radius: 20px;
+      cursor: pointer;
+      z-index: 150;
+      transition: all 0.3s ease;
+      opacity: 0.8;
+    }
+
+    .round-complete-btn:hover {
+      opacity: 1;
+      transform: scale(1.05);
+    }
+
+    /* Button Row */
+    .button-row {
+      display: flex;
+      gap: 20px;
+      align-items: center;
+      margin-top: 20px;
+    }
+
+    .settings-button {
+      font-family: 'Rajdhani', sans-serif;
+      font-size: 1.1rem;
+      font-weight: 600;
+      padding: 15px 30px;
+      background: transparent;
+      color: var(--text-secondary);
+      border: 2px solid var(--border-color);
+      border-radius: 50px;
+      cursor: pointer;
+      transition: all 0.3s ease;
+    }
+
+    .settings-button:hover {
+      color: var(--accent-cyan);
+      border-color: var(--accent-cyan);
+      box-shadow: var(--glow-cyan);
+    }
+
+    /* Settings Modal */
+    .modal-overlay {
+      display: none;
+      position: fixed;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      background: rgba(0, 0, 0, 0.85);
+      z-index: 500;
+      justify-content: center;
+      align-items: center;
+      backdrop-filter: blur(5px);
+    }
+
+    .modal-overlay.active {
+      display: flex;
+    }
+
+    .modal-content {
+      background: var(--bg-card);
+      border: 1px solid var(--border-color);
+      border-radius: 20px;
+      width: 90%;
+      max-width: 600px;
+      max-height: 85vh;
+      overflow: hidden;
+      display: flex;
+      flex-direction: column;
+      animation: modalSlide 0.3s ease;
+    }
+
+    @keyframes modalSlide {
+      from { transform: translateY(-50px); opacity: 0; }
+      to { transform: translateY(0); opacity: 1; }
+    }
+
+    .modal-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      padding: 20px 25px;
+      border-bottom: 1px solid var(--border-color);
+      background: linear-gradient(135deg, rgba(0, 240, 255, 0.1), rgba(255, 0, 170, 0.1));
+    }
+
+    .modal-header h2 {
+      font-family: 'Orbitron', sans-serif;
+      font-size: 1.5rem;
+      background: linear-gradient(135deg, var(--accent-cyan), var(--accent-magenta));
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+      background-clip: text;
+    }
+
+    .modal-close {
+      font-size: 2rem;
+      background: none;
+      border: none;
+      color: var(--text-secondary);
+      cursor: pointer;
+      transition: all 0.3s ease;
+      line-height: 1;
+    }
+
+    .modal-close:hover {
+      color: var(--accent-magenta);
+      transform: rotate(90deg);
+    }
+
+    .modal-body {
+      padding: 20px 25px;
+      overflow-y: auto;
+      flex: 1;
+    }
+
+    .settings-group {
+      background: rgba(255, 255, 255, 0.02);
+      border: 1px solid var(--border-color);
+      border-radius: 12px;
+      padding: 15px 20px;
+      margin-bottom: 15px;
+    }
+
+    .settings-group h3 {
+      font-family: 'Orbitron', sans-serif;
+      font-size: 1rem;
+      color: var(--accent-cyan);
+      margin-bottom: 15px;
+      padding-bottom: 10px;
+      border-bottom: 1px solid var(--border-color);
+    }
+
+    .setting-row {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      margin-bottom: 12px;
+      gap: 15px;
+    }
+
+    .setting-row:last-child {
+      margin-bottom: 0;
+    }
+
+    .setting-row label {
+      color: var(--text-secondary);
+      font-size: 0.95rem;
+    }
+    
+    .settings-subsection-title {
+      font-size: 0.85rem;
+      font-weight: 600;
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
+      padding-bottom: 5px;
+      border-bottom: 1px solid #444;
+      margin-bottom: 10px;
+    }
+
+    .setting-row input[type="number"],
+    .setting-row select {
+      background: var(--bg-dark);
+      border: 1px solid var(--border-color);
+      border-radius: 8px;
+      padding: 8px 12px;
+      color: var(--text-primary);
+      font-family: 'Rajdhani', sans-serif;
+      font-size: 1rem;
+      width: 120px;
+    }
+
+    .setting-row input[type="range"] {
+      flex: 1;
+      max-width: 150px;
+      accent-color: var(--accent-cyan);
+    }
+
+    .setting-row input[type="checkbox"] {
+      width: 20px;
+      height: 20px;
+      accent-color: var(--accent-cyan);
+    }
+
+    .setting-row span {
+      min-width: 30px;
+      color: var(--accent-cyan);
+      font-weight: 600;
+    }
+
+    /* Collapsible Settings */
+    .settings-group {
+      margin-bottom: 10px;
+      border-radius: 10px;
+      overflow: hidden;
+    }
+
+    .settings-group-header {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 12px 15px;
+      background: rgba(0, 240, 255, 0.05);
+      cursor: pointer;
+      transition: all 0.3s ease;
+      border-bottom: 1px solid transparent;
+    }
+
+    .settings-group-header:hover {
+      background: rgba(0, 240, 255, 0.1);
+    }
+
+    .settings-group.expanded .settings-group-header {
+      border-bottom: 1px solid var(--border-color);
+    }
+
+    .settings-group-header h3 {
+      font-family: 'Orbitron', sans-serif;
+      font-size: 0.95rem;
+      color: var(--accent-cyan);
+      margin: 0;
+      display: flex;
+      align-items: center;
+      gap: 10px;
+    }
+
+    .settings-group-header .toggle-icon {
+      font-size: 1.2rem;
+      transition: transform 0.3s ease;
+      color: var(--text-secondary);
+    }
+
+    .settings-group.expanded .toggle-icon {
+      transform: rotate(180deg);
+    }
+
+    .settings-group-content {
+      max-height: 0;
+      overflow: hidden;
+      transition: max-height 0.3s ease, padding 0.3s ease;
+      padding: 0 15px;
+    }
+
+    .settings-group.expanded .settings-group-content {
+      max-height: 1000px;
+      padding: 15px;
+    }
+
+    /* Sub-sections */
+    .settings-subsection {
+      margin-bottom: 12px;
+      padding-bottom: 12px;
+      border-bottom: 1px dashed var(--border-color);
+    }
+
+    .settings-subsection:last-child {
+      border-bottom: none;
+      margin-bottom: 0;
+      padding-bottom: 0;
+    }
+
+    .settings-subsection-title {
+      font-size: 0.85rem;
+      color: var(--accent-magenta);
+      margin-bottom: 10px;
+      text-transform: uppercase;
+      letter-spacing: 1px;
+    }
+
+    /* Setting rows in groups */
+    .settings-group .setting-row {
+      margin-bottom: 10px;
+      padding: 5px 0;
+    }
+
+    .setting-row.compact {
+      gap: 10px;
+    }
+
+    .setting-row input[type="number"] {
+      width: 80px;
+    }
+
+    .setting-row select {
+      width: auto;
+      min-width: 100px;
+    }
+
+    /* Quick settings highlight */
+    .quick-settings {
+      background: linear-gradient(135deg, rgba(0, 240, 255, 0.08), rgba(255, 0, 170, 0.08));
+      border: 1px solid rgba(0, 240, 255, 0.3);
+    }
+
+    .quick-settings .settings-group-header {
+      background: transparent;
+    }
+
+    .quick-settings .settings-group-header h3 {
+      color: var(--accent-yellow);
+    }
+
+    /* Tabs for settings */
+    .settings-tabs {
+      display: flex;
+      gap: 5px;
+      padding: 10px 15px;
+      border-bottom: 1px solid var(--border-color);
+      overflow-x: auto;
+    }
+
+    .settings-tab {
+      padding: 8px 16px;
+      background: transparent;
+      border: 1px solid var(--border-color);
+      border-radius: 20px;
+      color: var(--text-secondary);
+      font-family: 'Rajdhani', sans-serif;
+      font-size: 0.9rem;
+      cursor: pointer;
+      white-space: nowrap;
+      transition: all 0.3s ease;
+    }
+
+    .settings-tab:hover {
+      border-color: var(--accent-cyan);
+      color: var(--accent-cyan);
+    }
+
+    .settings-tab.active {
+      background: var(--accent-cyan);
+      border-color: var(--accent-cyan);
+      color: var(--bg-dark);
+    }
+
+    .settings-panel {
+      display: none;
+    }
+
+    .settings-panel.active {
+      display: block;
+    }
+
+    .modal-footer {
+      padding: 20px 25px;
+      border-top: 1px solid var(--border-color);
+      display: flex;
+      justify-content: flex-end;
+    }
+
+    .save-settings-btn {
+      font-family: 'Orbitron', sans-serif;
+      font-size: 1rem;
+      font-weight: 700;
+      padding: 12px 35px;
+      background: linear-gradient(135deg, var(--accent-cyan), var(--accent-green));
+      color: var(--bg-dark);
+      border: none;
+      border-radius: 25px;
+      cursor: pointer;
+      transition: all 0.3s ease;
+    }
+
+    .save-settings-btn:hover {
+      transform: scale(1.05);
+      box-shadow: 0 0 20px rgba(0, 255, 136, 0.5);
+    }
+
+    @media (max-width: 768px) {
+      .hub-title {
+        font-size: 2rem;
+        letter-spacing: 4px;
+      }
+      
+      .games-grid {
+        grid-template-columns: 1fr;
+      }
+
+      .game-header {
+        flex-wrap: wrap;
+        height: auto;
+        padding: 10px;
+        gap: 10px;
+      }
+
+      .current-game-info {
+        flex-wrap: wrap;
+      }
+
+      .button-row {
+        flex-direction: column;
+      }
+
+      .modal-content {
+        width: 95%;
+        max-height: 90vh;
+      }
+
+      .setting-row {
+        flex-wrap: wrap;
+      }
+    }
+  </style>
+</head>
+<body>
+  <div class="bg-grid"></div>
+
+  <!-- Selection Screen -->
+  <div id="selection-screen">
+    <h1 class="hub-title">Brain Train Hub</h1>
+    <p class="hub-subtitle">Select your training modules</p>
+    
+    <div class="games-grid" id="games-grid"></div>
+    
+    <p class="selection-count"><span id="selected-count">0</span> games selected</p>
+    <div class="button-row">
+      <button class="settings-button" id="settings-btn">⚙️ Settings</button>
+      <button class="start-button" id="start-btn" disabled>Start Training</button>
+    </div>
+  </div>
+
+  <!-- API Key Modal for Bridge Analogy -->
+  <div id="api-key-modal" class="modal-overlay">
+    <div class="modal-content" style="max-width: 500px;">
+      <div class="modal-header">
+        <h2>🌉 Bridge Analogy API Key</h2>
+        <button class="modal-close" id="close-api-key">×</button>
+      </div>
+      <div class="modal-body">
+        <p style="color: var(--text-secondary); margin-bottom: 20px;">
+          Bridge Analogy requires a Google AI Studio API key to function. 
+          Get your API key from:
+        </p>
+        <div style="margin-bottom: 20px;">
+          <a href="https://aistudio.google.com/api-keys" target="_blank" 
+             style="color: var(--accent-cyan); text-decoration: none; font-weight: 600; 
+                    display: inline-block; padding: 10px 20px; border: 1px solid var(--accent-cyan); 
+                    border-radius: 5px; transition: all 0.3s;">
+            🔗 Get API Key at aistudio.google.com/api-keys
+          </a>
+        </div>
+        <div class="setting-row" style="margin-top: 20px;">
+          <label for="api-key-input">API Key:</label>
+          <input type="password" id="api-key-input" 
+                 placeholder="Enter your Google AI Studio API key"
+                 style="width: 100%; padding: 10px; background: var(--bg-card); 
+                        border: 1px solid var(--border-color); border-radius: 5px; 
+                        color: var(--text-primary); font-family: monospace;">
+        </div>
+        <p style="color: #888; font-size: 0.85rem; margin-top: 10px; font-style: italic;">
+          Your API key will be stored locally and only sent to Bridge Analogy.
+        </p>
+      </div>
+      <div class="modal-footer">
+        <button class="save-settings-btn" id="save-api-key">Save API Key</button>
+        <button class="save-settings-btn" style="background: #444; margin-left: 10px;" 
+                id="cancel-api-key">Cancel</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Settings Modal -->
+  <div id="settings-modal" class="modal-overlay">
+    <div class="modal-content" style="max-width: 700px;">
+      <div class="modal-header">
+        <h2>Game Settings</h2>
+        <button class="modal-close" id="close-settings">×</button>
+      </div>
+      
+      <!-- Settings Tabs -->
+      <div class="settings-tabs">
+        <button class="settings-tab active" data-panel="quick">⚡ Quick</button>
+        <button class="settings-tab" data-panel="mot">🎯 3D MOT</button>
+        <button class="settings-tab" data-panel="syllogimous">🧠 Syllogimous</button>
+        <button class="settings-tab" data-panel="epson">🔢 Epson</button>
+        <button class="settings-tab" data-panel="peripheral">👁️ Peripheral</button>
+        <button class="settings-tab" data-panel="reading">📖 Reading</button>
+        <button class="settings-tab" data-panel="bridge">🌉 Bridge Analogy</button>
+        <button class="settings-tab" data-panel="reinforcement">🎨 Reinforcement</button>
+      </div>
+
+      <div class="modal-body">
+        <!-- Quick Settings Panel -->
+        <div class="settings-panel active" id="panel-quick">
+          <div class="settings-group quick-settings expanded">
+            <div class="settings-group-header" onclick="toggleSettingsGroup(this)">
+              <h3>⭐ Most Used Settings</h3>
+              <span class="toggle-icon">▼</span>
+            </div>
+            <div class="settings-group-content">
+              <div class="setting-row">
+                <label>3D MOT - Target Balls:</label>
+                <input type="number" id="mot-balls" min="2" max="8" value="3">
+              </div>
+              <div class="setting-row">
+                <label>3D MOT - Speed:</label>
+                <input type="range" id="mot-speed" min="1" max="10" value="5">
+                <span id="mot-speed-val">5</span>
+              </div>
+              <div class="setting-row">
+                <label>Syllogimous - Premises:</label>
+                <select id="syllogimous-difficulty">
+                  <option value="1">2 (Easy)</option>
+                  <option value="2" selected>3 (Medium)</option>
+                  <option value="3">4 (Hard)</option>
+                  <option value="4">5 (Expert)</option>
+                </select>
+              </div>
+              <div class="setting-row">
+                <label>Epson Mode:</label>
+                <select id="epson-mode">
+                  <option value="classic">Classic</option>
+                  <option value="multi" selected>Multi</option>
+                </select>
+              </div>
+              <div class="setting-row">
+                <label>Reading Speed:</label>
+                <input type="number" id="reading-speed" min="100" max="1000" value="297">
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- 3D MOT Settings Panel -->
+        <div class="settings-panel" id="panel-mot">
+          <div class="settings-group expanded">
+            <div class="settings-group-header" onclick="toggleSettingsGroup(this)">
+              <h3>🎯 Core Settings</h3>
+              <span class="toggle-icon">▼</span>
+            </div>
+            <div class="settings-group-content">
+              <div class="setting-row">
+                <label>Target Balls (Level):</label>
+                <input type="number" id="mot-level" min="1" max="10" value="4">
+              </div>
+              <div class="setting-row">
+                <label>Blue Distractors:</label>
+                <input type="number" id="mot-distractors" min="0" max="15" value="4">
+              </div>
+              <div class="setting-row">
+                <label>Colored Distractors:</label>
+                <input type="number" id="mot-colored-distractors" min="0" max="10" value="0">
+              </div>
+              <div class="setting-row">
+                <label>Ball Speed:</label>
+                <input type="range" id="mot-ball-speed" min="1" max="100" value="35">
+                <span id="mot-ball-speed-val">0.35</span>
+              </div>
+              <div class="setting-row">
+                <label>Auto Progression:</label>
+                <input type="checkbox" id="mot-auto-progression" checked>
+              </div>
+            </div>
+          </div>
+
+          <div class="settings-group">
+            <div class="settings-group-header" onclick="toggleSettingsGroup(this)">
+              <h3>⏱️ Timing</h3>
+              <span class="toggle-icon">▼</span>
+            </div>
+            <div class="settings-group-content">
+              <div class="setting-row">
+                <label>Highlight Duration (ms):</label>
+                <input type="number" id="mot-highlight-duration" min="500" max="5000" value="1200">
+              </div>
+              <div class="setting-row">
+                <label>Tracking Duration (ms):</label>
+                <input type="number" id="mot-delay-after" min="3000" max="30000" value="7500">
+              </div>
+              <div class="setting-row">
+                <label>Trial Start Delay (ms):</label>
+                <input type="number" id="mot-start-delay" min="0" max="2000" value="500">
+              </div>
+              <div class="setting-row">
+                <label>Trial End Delay (ms):</label>
+                <input type="number" id="mot-end-delay" min="500" max="3000" value="1200">
+              </div>
+              <div class="setting-row">
+                <label>Highlight Simultaneously:</label>
+                <input type="checkbox" id="mot-highlight-simul" checked>
+              </div>
+            </div>
+          </div>
+
+          <div class="settings-group">
+            <div class="settings-group-header" onclick="toggleSettingsGroup(this)">
+              <h3>📦 Box & Appearance</h3>
+              <span class="toggle-icon">▼</span>
+            </div>
+            <div class="settings-group-content">
+              <div class="setting-row">
+                <label>Box Width:</label>
+                <input type="number" id="mot-box-x" min="10" max="100" value="45">
+              </div>
+              <div class="setting-row">
+                <label>Box Height:</label>
+                <input type="number" id="mot-box-y" min="10" max="100" value="30">
+              </div>
+              <div class="setting-row">
+                <label>Box Depth:</label>
+                <input type="number" id="mot-box-z" min="5" max="100" value="25">
+              </div>
+              <div class="setting-row">
+                <label>Ball Size:</label>
+                <input type="range" id="mot-ball-radius" min="5" max="40" value="18">
+                <span id="mot-ball-radius-val">1.8</span>
+              </div>
+              <div class="setting-row">
+                <label>Ball Opacity:</label>
+                <input type="range" id="mot-ball-opacity" min="50" max="100" value="94">
+                <span id="mot-ball-opacity-val">0.94</span>
+              </div>
+              <div class="setting-row">
+                <label>Ball Metalness:</label>
+                <input type="range" id="mot-ball-metalness" min="0" max="100" value="65">
+                <span id="mot-ball-metalness-val">0.65</span>
+              </div>
+              <div class="setting-row">
+                <label>Box Texture:</label>
+                <select id="mot-box-texture">
+                  <option value="Gray" selected>Gray</option>
+                  <option value="Black">Black</option>
+                  <option value="White">White</option>
+                  <option value="Wall 1">Wall 1</option>
+                  <option value="Wall 2">Wall 2</option>
+                  <option value="Wall 3">Wall 3</option>
+                </select>
+              </div>
+            </div>
+          </div>
+
+          <div class="settings-group">
+            <div class="settings-group-header" onclick="toggleSettingsGroup(this)">
+              <h3>🔄 Rotation & Camera</h3>
+              <span class="toggle-icon">▼</span>
+            </div>
+            <div class="settings-group-content">
+              <div class="setting-row">
+                <label>Screen Rotation:</label>
+                <input type="checkbox" id="mot-screen-rotation">
+              </div>
+              <div class="setting-row">
+                <label>Rotate X:</label>
+                <input type="checkbox" id="mot-rotate-x" checked>
+              </div>
+              <div class="setting-row">
+                <label>Rotate Y:</label>
+                <input type="checkbox" id="mot-rotate-y" checked>
+              </div>
+              <div class="setting-row">
+                <label>Rotate Z:</label>
+                <input type="checkbox" id="mot-rotate-z" checked>
+              </div>
+              <div class="setting-row">
+                <label>FOV:</label>
+                <input type="number" id="mot-fov" min="40" max="120" value="75">
+              </div>
+              <div class="setting-row">
+                <label>Graphics:</label>
+                <select id="mot-graphics">
+                  <option value="Potato">Potato</option>
+                  <option value="Low">Low</option>
+                  <option value="Default" selected>Default</option>
+                  <option value="High">High</option>
+                </select>
+              </div>
+            </div>
+          </div>
+
+          <div class="settings-group">
+            <div class="settings-group-header" onclick="toggleSettingsGroup(this)">
+              <h3>⚫ Center Dot & Divider</h3>
+              <span class="toggle-icon">▼</span>
+            </div>
+            <div class="settings-group-content">
+              <div class="setting-row">
+                <label>Dot Size:</label>
+                <input type="number" id="mot-dot-size" min="5" max="30" value="12">
+              </div>
+              <div class="setting-row">
+                <label>Blink Dot:</label>
+                <input type="checkbox" id="mot-blink-dot" checked>
+              </div>
+              <div class="setting-row">
+                <label>Divider:</label>
+                <select id="mot-divider">
+                  <option value="none" selected>None</option>
+                  <option value="vertical">Vertical</option>
+                </select>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Syllogimous Settings Panel -->
+        <div class="settings-panel" id="panel-syllogimous">
+          <div class="settings-group expanded">
+            <div class="settings-group-header" onclick="toggleSettingsGroup(this)">
+              <h3>🧠 Core Settings</h3>
+              <span class="toggle-icon">▼</span>
+            </div>
+            <div class="settings-group-content">
+              <div class="setting-row">
+                <label>Number of Premises:</label>
+                <input type="number" id="syl-premises" min="2" max="8" value="3">
+              </div>
+              <div class="setting-row">
+                <label>Timer (seconds):</label>
+                <input type="number" id="syl-timer" min="5" max="120" value="30">
+              </div>
+              <div class="setting-row">
+                <label>Use Timer:</label>
+                <input type="checkbox" id="syl-use-timer">
+              </div>
+              <div class="setting-row">
+                <label>Auto Progression:</label>
+                <input type="checkbox" id="syl-auto-progression">
+              </div>
+              <div class="setting-row">
+                <label>Scramble Factor:</label>
+                <input type="number" id="syl-scramble" min="1" max="30" value="12">
+              </div>
+            </div>
+          </div>
+
+          <div class="settings-group">
+            <div class="settings-group-header" onclick="toggleSettingsGroup(this)">
+              <h3>🎮 Game Modes (Active)</h3>
+              <span class="toggle-icon">▼</span>
+            </div>
+            <div class="settings-group-content">
+              <div class="setting-row">
+                <label>Distinction:</label>
+                <input type="checkbox" id="syl-distinction" checked>
+              </div>
+              <div class="setting-row">
+                <label>Linear:</label>
+                <input type="checkbox" id="syl-linear" checked>
+              </div>
+              <div class="setting-row">
+                <label>Syllogism:</label>
+                <input type="checkbox" id="syl-syllogism" checked>
+              </div>
+              <div class="setting-row">
+                <label>Direction 2D:</label>
+                <input type="checkbox" id="syl-direction">
+              </div>
+              <div class="setting-row">
+                <label>Direction 3D:</label>
+                <input type="checkbox" id="syl-direction3d">
+              </div>
+              <div class="setting-row">
+                <label>Analogy:</label>
+                <input type="checkbox" id="syl-analogy">
+              </div>
+            </div>
+          </div>
+
+          <div class="settings-group">
+            <div class="settings-group-header" onclick="toggleSettingsGroup(this)">
+              <h3>✨ Word Modifiers</h3>
+              <span class="toggle-icon">▼</span>
+            </div>
+            <div class="settings-group-content">
+              <div class="setting-row">
+                <label>Meaningful Words:</label>
+                <input type="checkbox" id="syl-meaningful-words">
+              </div>
+              <div class="setting-row">
+                <label>Nonsense Words:</label>
+                <input type="checkbox" id="syl-nonsense-words">
+              </div>
+              <div class="setting-row">
+                <label>Garbage Words:</label>
+                <input type="checkbox" id="syl-garbage-words">
+              </div>
+              <div class="setting-row">
+                <label>Emoji:</label>
+                <input type="checkbox" id="syl-emoji">
+              </div>
+              <div class="setting-row">
+                <label>Voronoi Emoji:</label>
+                <input type="checkbox" id="syl-junk-emoji">
+              </div>
+            </div>
+          </div>
+
+          <div class="settings-group">
+            <div class="settings-group-header" onclick="toggleSettingsGroup(this)">
+              <h3>🔧 Logic Modifiers</h3>
+              <span class="toggle-icon">▼</span>
+            </div>
+            <div class="settings-group-content">
+              <div class="setting-row">
+                <label>Backtracking Linear:</label>
+                <input type="checkbox" id="syl-backtracking">
+              </div>
+              <div class="setting-row">
+                <label>Connection Branching:</label>
+                <input type="checkbox" id="syl-branching">
+              </div>
+            </div>
+          </div>
+
+          <div class="settings-group">
+            <div class="settings-group-header" onclick="toggleSettingsGroup(this)">
+              <h3>📊 Display Options</h3>
+              <span class="toggle-icon">▼</span>
+            </div>
+            <div class="settings-group-content">
+              <div class="setting-row">
+                <label>Visual Noise:</label>
+                <input type="checkbox" id="syl-visual-noise">
+              </div>
+              <div class="setting-row">
+                <label>Minimal Mode:</label>
+                <input type="checkbox" id="syl-minimal">
+              </div>
+              <div class="setting-row">
+                <label>Wide Premises:</label>
+                <input type="checkbox" id="syl-wide">
+              </div>
+              <div class="setting-row">
+                <label>Spoiler Conclusion:</label>
+                <input type="checkbox" id="syl-spoiler">
+              </div>
+            </div>
+          </div>
+
+          <div class="settings-group" style="border-color: #555; opacity: 0.8;">
+            <div class="settings-group-header" onclick="toggleSettingsGroup(this)" style="background: rgba(100,100,100,0.2);">
+              <h3 style="color: #888;">📦 Legacy/Experimental Settings</h3>
+              <span class="toggle-icon">▼</span>
+            </div>
+            <div class="settings-group-content">
+              <p style="color: #666; font-size: 0.85rem; margin-bottom: 15px; font-style: italic;">These settings are legacy or experimental and may not be fully supported.</p>
+              
+              <div class="settings-subsection-title" style="color: #777;">Game Modes</div>
+              <div class="setting-row">
+                <label>Direction 4D:</label>
+                <input type="checkbox" id="syl-direction4d">
+              </div>
+              <div class="setting-row">
+                <label>Anchor Space:</label>
+                <input type="checkbox" id="syl-anchor-space">
+              </div>
+              <div class="setting-row">
+                <label>Binary:</label>
+                <input type="checkbox" id="syl-binary">
+              </div>
+              <div class="setting-row">
+                <label>Meta:</label>
+                <input type="checkbox" id="syl-meta">
+              </div>
+              <div class="setting-row">
+                <label>Enable Negation:</label>
+                <input type="checkbox" id="syl-negation">
+              </div>
+              <div class="setting-row">
+                <label>Carousel Mode:</label>
+                <input type="checkbox" id="syl-carousel">
+              </div>
+
+              <div class="settings-subsection-title" style="color: #777; margin-top: 15px;">Exclusive Modes</div>
+              <div class="setting-row">
+                <label>Only Analogy:</label>
+                <input type="checkbox" id="syl-only-analogy">
+              </div>
+              <div class="setting-row">
+                <label>Only Binary:</label>
+                <input type="checkbox" id="syl-only-binary">
+              </div>
+              <div class="setting-row">
+                <label>Max Binary Depth:</label>
+                <input type="number" id="syl-binary-depth" min="1" max="5" value="1">
+              </div>
+
+              <div class="settings-subsection-title" style="color: #777; margin-top: 15px;">Transforms</div>
+              <div class="setting-row">
+                <label>Transform Set:</label>
+                <input type="checkbox" id="syl-transform-set">
+              </div>
+              <div class="setting-row">
+                <label>Transform Mirror:</label>
+                <input type="checkbox" id="syl-transform-mirror">
+              </div>
+              <div class="setting-row">
+                <label>Transform Scale:</label>
+                <input type="checkbox" id="syl-transform-scale">
+              </div>
+              <div class="setting-row">
+                <label>Transform Rotate:</label>
+                <input type="checkbox" id="syl-transform-rotate">
+              </div>
+              <div class="setting-row">
+                <label>Transform Interleave:</label>
+                <input type="checkbox" id="syl-transform-interleave">
+              </div>
+
+              <div class="settings-subsection-title" style="color: #777; margin-top: 15px;">Hard Mode Levels</div>
+              <div class="setting-row">
+                <label>2D Hard Mode Level:</label>
+                <input type="number" id="syl-2d-hard" min="0" max="10" value="0">
+              </div>
+              <div class="setting-row">
+                <label>3D Hard Mode Level:</label>
+                <input type="number" id="syl-3d-hard" min="0" max="10" value="0">
+              </div>
+              <div class="setting-row">
+                <label>4D Hard Mode Level:</label>
+                <input type="number" id="syl-4d-hard" min="0" max="10" value="0">
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Brain Train Epson Settings Panel -->
+        <div class="settings-panel" id="panel-epson">
+          <div class="settings-group expanded">
+            <div class="settings-group-header" onclick="toggleSettingsGroup(this)">
+              <h3>🔢 Core Settings</h3>
+              <span class="toggle-icon">▼</span>
+            </div>
+            <div class="settings-group-content">
+              <div class="setting-row">
+                <label>Mode:</label>
+                <select id="epson-mode-full">
+                  <option value="classic">Classic (Numbers only)</option>
+                  <option value="multi" selected>Multi (Numbers + Semantic)</option>
+                </select>
+              </div>
+              <div class="setting-row">
+                <label>Number Range:</label>
+                <select id="epson-range-full">
+                  <option value="10" selected>1-10</option>
+                  <option value="20">1-20</option>
+                </select>
+              </div>
+              <div class="setting-row">
+                <label>Show Error Counts:</label>
+                <input type="checkbox" id="epson-show-errors" checked>
+              </div>
+            </div>
+          </div>
+
+          <div class="settings-group">
+            <div class="settings-group-header" onclick="toggleSettingsGroup(this)">
+              <h3>📚 Semantic Categories</h3>
+              <span class="toggle-icon">▼</span>
+            </div>
+            <div class="settings-group-content">
+              <div class="setting-row">
+                <label>Common Knowledge:</label>
+                <input type="checkbox" id="epson-tier2">
+              </div>
+              <div class="setting-row">
+                <label>Expert Knowledge:</label>
+                <input type="checkbox" id="epson-tier3">
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Peripheral Trainer Settings Panel -->
+        <div class="settings-panel" id="panel-peripheral">
+          <div class="settings-group expanded">
+            <div class="settings-group-header" onclick="toggleSettingsGroup(this)">
+              <h3>👁️ Core Settings</h3>
+              <span class="toggle-icon">▼</span>
+            </div>
+            <div class="settings-group-content">
+              <div class="setting-row">
+                <label>Starting Level:</label>
+                <input type="number" id="peripheral-level" min="1" max="10" value="1">
+              </div>
+              <div class="setting-row">
+                <label>Game Duration (sec):</label>
+                <input type="number" id="peripheral-duration" min="30" max="300" value="60">
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Trial & Error Reading Settings Panel -->
+        <div class="settings-panel" id="panel-reading">
+          <div class="settings-group expanded">
+            <div class="settings-group-header" onclick="toggleSettingsGroup(this)">
+              <h3>📖 Core Settings</h3>
+              <span class="toggle-icon">▼</span>
+            </div>
+            <div class="settings-group-content">
+              <div class="setting-row">
+                <label>Scroll Speed:</label>
+                <input type="number" id="reading-speed-full" min="50" max="1500" value="297">
+              </div>
+              <div class="setting-row">
+                <label>Text Size:</label>
+                <input type="number" id="reading-text-size" min="16" max="72" value="42">
+              </div>
+              <div class="setting-row">
+                <label>Text Direction:</label>
+                <select id="reading-direction">
+                  <option value="ltr" selected>Left to Right</option>
+                  <option value="rtl">Right to Left</option>
+                </select>
+              </div>
+              <div class="setting-row">
+                <label>RSVP Mode:</label>
+                <input type="checkbox" id="reading-rsvp">
+              </div>
+            </div>
+          </div>
+
+          <div class="settings-group">
+            <div class="settings-group-header" onclick="toggleSettingsGroup(this)">
+              <h3>🔤 Letter Manipulations</h3>
+              <span class="toggle-icon">▼</span>
+            </div>
+            <div class="settings-group-content">
+              <div class="setting-row">
+                <label>Skip Letters:</label>
+                <select id="reading-skip-letters">
+                  <option value="no" selected>No</option>
+                  <option value="first">First</option>
+                  <option value="last">Last</option>
+                  <option value="middle">Middle</option>
+                  <option value="random">Random</option>
+                </select>
+              </div>
+              <div class="setting-row">
+                <label>Shuffle Letters:</label>
+                <select id="reading-shuffle-letters">
+                  <option value="no" selected>No</option>
+                  <option value="all">All</option>
+                  <option value="inner">Inner Only</option>
+                </select>
+              </div>
+              <div class="setting-row">
+                <label>Reverse Letters:</label>
+                <select id="reading-reverse-letters">
+                  <option value="no" selected>No</option>
+                  <option value="all">All</option>
+                  <option value="random">Random</option>
+                </select>
+              </div>
+              <div class="setting-row">
+                <label>False Letters:</label>
+                <select id="reading-false-letters">
+                  <option value="no" selected>No</option>
+                  <option value="random">Random</option>
+                </select>
+              </div>
+              <div class="setting-row">
+                <label>Eliminate Letters:</label>
+                <select id="reading-eliminate-letters">
+                  <option value="no" selected>No</option>
+                  <option value="vowels">Vowels</option>
+                  <option value="consonants">Consonants</option>
+                  <option value="random">Random</option>
+                </select>
+              </div>
+              <div class="setting-row">
+                <label>Rotate Letters:</label>
+                <select id="reading-rotate-letters">
+                  <option value="no" selected>No</option>
+                  <option value="180">180°</option>
+                  <option value="random">Random</option>
+                </select>
+              </div>
+              <div class="setting-row">
+                <label>Mirror Letters:</label>
+                <select id="reading-mirror-letters">
+                  <option value="no" selected>No</option>
+                  <option value="horizontal">Horizontal</option>
+                  <option value="vertical">Vertical</option>
+                </select>
+              </div>
+            </div>
+          </div>
+
+          <div class="settings-group">
+            <div class="settings-group-header" onclick="toggleSettingsGroup(this)">
+              <h3>📝 Word Manipulations</h3>
+              <span class="toggle-icon">▼</span>
+            </div>
+            <div class="settings-group-content">
+              <div class="setting-row">
+                <label>Shuffle Words:</label>
+                <select id="reading-shuffle-words">
+                  <option value="no" selected>No</option>
+                  <option value="all">All</option>
+                  <option value="random">Random</option>
+                </select>
+              </div>
+              <div class="setting-row">
+                <label>Skip Words:</label>
+                <select id="reading-skip-words">
+                  <option value="no" selected>No</option>
+                  <option value="random">Random</option>
+                </select>
+              </div>
+              <div class="setting-row">
+                <label>False Words:</label>
+                <select id="reading-false-words">
+                  <option value="no" selected>No</option>
+                  <option value="random">Random</option>
+                </select>
+              </div>
+              <div class="setting-row">
+                <label>Concat Words:</label>
+                <select id="reading-concat-words">
+                  <option value="no" selected>No</option>
+                  <option value="pairs">Pairs</option>
+                  <option value="random">Random</option>
+                </select>
+              </div>
+              <div class="setting-row">
+                <label>Rotate Words:</label>
+                <select id="reading-rotate-words">
+                  <option value="no" selected>No</option>
+                  <option value="180">180°</option>
+                  <option value="random">Random</option>
+                </select>
+              </div>
+              <div class="setting-row">
+                <label>Mirror Words:</label>
+                <select id="reading-mirror-words">
+                  <option value="no" selected>No</option>
+                  <option value="horizontal">Horizontal</option>
+                  <option value="vertical">Vertical</option>
+                </select>
+              </div>
+            </div>
+          </div>
+
+          <div class="settings-group">
+            <div class="settings-group-header" onclick="toggleSettingsGroup(this)">
+              <h3>📄 Sentence Manipulations</h3>
+              <span class="toggle-icon">▼</span>
+            </div>
+            <div class="settings-group-content">
+              <div class="setting-row">
+                <label>Shuffle Sentences:</label>
+                <select id="reading-shuffle-sentences">
+                  <option value="no" selected>No</option>
+                  <option value="all">All</option>
+                  <option value="random">Random</option>
+                </select>
+              </div>
+            </div>
+          </div>
+
+          <div class="settings-group">
+            <div class="settings-group-header" onclick="toggleSettingsGroup(this)">
+              <h3>🔐 ROT-N Cipher</h3>
+              <span class="toggle-icon">▼</span>
+            </div>
+            <div class="settings-group-content">
+              <div class="setting-row">
+                <label>Enable ROT-N:</label>
+                <input type="checkbox" id="reading-rotn-enabled">
+              </div>
+              <div class="setting-row">
+                <label>ROT Min:</label>
+                <input type="number" id="reading-rotn-min" min="1" max="25" value="1">
+              </div>
+              <div class="setting-row">
+                <label>ROT Max:</label>
+                <input type="number" id="reading-rotn-max" min="1" max="25" value="1">
+              </div>
+            </div>
+          </div>
+
+          <div class="settings-group">
+            <div class="settings-group-header" onclick="toggleSettingsGroup(this)">
+              <h3>📐 Skewing</h3>
+              <span class="toggle-icon">▼</span>
+            </div>
+            <div class="settings-group-content">
+              <div class="setting-row">
+                <label>Enable Skewing:</label>
+                <input type="checkbox" id="reading-skew-enabled">
+              </div>
+              <div class="setting-row">
+                <label>Skew Min (deg):</label>
+                <input type="number" id="reading-skew-min" min="-90" max="0" value="-30">
+              </div>
+              <div class="setting-row">
+                <label>Skew Max (deg):</label>
+                <input type="number" id="reading-skew-max" min="0" max="90" value="30">
+              </div>
+            </div>
+          </div>
+        </div>
+        
+        <!-- Bridge Analogy Settings Panel -->
+        <div class="settings-panel" id="panel-bridge">
+          <div class="settings-group expanded">
+            <div class="settings-group-header" onclick="toggleSettingsGroup(this)">
+              <h3>🌉 Core Settings</h3>
+              <span class="toggle-icon">▼</span>
+            </div>
+            <div class="settings-group-content">
+              <div class="setting-row">
+                <label>AI Model:</label>
+                <select id="bridge-model">
+                  <option value="gemini-2.5-flash" selected>Gemini 2.5 Flash</option>
+                  <option value="gemini-pro">Gemini Pro</option>
+                  <option value="gemini-3-pro-preview">Gemini 3 Pro Preview</option>
+                </select>
+              </div>
+              <div class="setting-row">
+                <label>Auto-start rounds:</label>
+                <input type="checkbox" id="bridge-autostart" checked>
+              </div>
+            </div>
+          </div>
+          
+          <div class="settings-group expanded">
+            <div class="settings-group-header" onclick="toggleSettingsGroup(this)">
+              <h3>🔑 API Key</h3>
+              <span class="toggle-icon">▼</span>
+            </div>
+            <div class="settings-group-content">
+              <p style="color: var(--text-secondary); font-size: 0.9rem; margin-bottom: 15px;">
+                Get your Google AI Studio API key from:
+                <a href="https://aistudio.google.com/api-keys" target="_blank" 
+                   style="color: var(--accent-cyan); text-decoration: none; margin-left: 5px;">
+                  🔗 aistudio.google.com/api-keys
+                </a>
+              </p>
+              <div class="setting-row" style="flex-direction: column; align-items: flex-start;">
+                <label for="bridge-api-key" style="margin-bottom: 8px;">API Key:</label>
+                <input type="password" id="bridge-api-key" 
+                       placeholder="Enter your Google AI Studio API key"
+                       style="width: 100%; padding: 10px; background: var(--bg-card); 
+                              border: 1px solid var(--border-color); border-radius: 5px; 
+                              color: var(--text-primary); font-family: monospace; font-size: 0.9rem;">
+              </div>
+              <p style="color: #888; font-size: 0.85rem; margin-top: 10px; font-style: italic;">
+                Your API key is stored locally and only sent to Bridge Analogy.
+              </p>
+            </div>
+          </div>
+        </div>
+        
+        <!-- Reinforcement Settings Panel -->
+        <div class="settings-panel" id="panel-reinforcement">
+          <div class="settings-group expanded">
+            <div class="settings-group-header" onclick="toggleSettingsGroup(this)">
+              <h3>🎨 Reinforcement Settings</h3>
+              <span class="toggle-icon">▼</span>
+            </div>
+            <div class="settings-group-content">
+              <p style="color: var(--text-secondary); font-size: 0.9rem; margin-bottom: 15px;">
+                Show images as positive/negative reinforcement based on game performance.
+                <a href="https://rule34.xxx/index.php?page=account&s=options" target="_blank" 
+                   style="color: var(--accent-cyan); text-decoration: none;">
+                  🔗 Get API credentials (optional, for higher limits)
+                </a>
+              </p>
+              <div class="setting-row">
+                <label>Enable Reinforcement:</label>
+                <input type="checkbox" id="reinforcement-enabled">
+              </div>
+              <div class="setting-row" style="flex-direction: column; align-items: flex-start;">
+                <label style="margin-bottom: 8px;">Paste Full Credentials (auto-extracts):</label>
+                <input type="text" id="reinforcement-credentials-paste" 
+                       placeholder="Paste: &api_key=xxx&user_id=xxx"
+                       style="width: 100%; padding: 8px; background: var(--bg-card); 
+                              border: 1px solid var(--accent-cyan); border-radius: 5px; 
+                              color: var(--text-primary); font-family: monospace; font-size: 0.85em;">
+                <small style="color: var(--text-secondary); margin-top: 4px;">
+                  Copy from Rule34 account → API Access Credentials section
+                </small>
+              </div>
+              <div class="setting-row">
+                <label>User ID:</label>
+                <input type="text" id="reinforcement-user-id" 
+                       placeholder="e.g., 5667142"
+                       style="width: 120px; padding: 8px; background: var(--bg-card); 
+                              border: 1px solid var(--border-color); border-radius: 5px; 
+                              color: var(--text-primary);">
+              </div>
+              <div class="setting-row">
+                <label>API Key:</label>
+                <input type="text" id="reinforcement-api-key" 
+                       placeholder="Your API key"
+                       style="width: 100%; padding: 8px; background: var(--bg-card); 
+                              border: 1px solid var(--border-color); border-radius: 5px; 
+                              color: var(--text-primary); font-family: monospace; font-size: 0.8em;">
+              </div>
+              <div class="setting-row" style="flex-direction: column; align-items: flex-start;">
+                <label for="reinforcement-liked-tags" style="margin-bottom: 8px;">Tags You Love (comma-separated):</label>
+                <input type="text" id="reinforcement-liked-tags" 
+                       placeholder="e.g., wholesome, cute, happy"
+                       style="width: 100%; padding: 8px; background: var(--bg-card); 
+                              border: 1px solid var(--border-color); border-radius: 5px; 
+                              color: var(--text-primary);">
+              </div>
+              <div class="setting-row" style="flex-direction: column; align-items: flex-start;">
+                <label for="reinforcement-hated-tags" style="margin-bottom: 8px;">Tags You Hate (comma-separated):</label>
+                <input type="text" id="reinforcement-hated-tags" 
+                       placeholder="e.g., scary, sad, dark"
+                       style="width: 100%; padding: 8px; background: var(--bg-card); 
+                              border: 1px solid var(--border-color); border-radius: 5px; 
+                              color: var(--text-primary);">
+              </div>
+              <p style="color: #888; font-size: 0.85rem; margin-top: 10px; font-style: italic;">
+                Images will appear on the side of the screen: positive tags for wins, negative tags for losses.
+              </p>
+            </div>
+          </div>
+        </div>
+      </div>
+      <div class="modal-footer">
+        <button class="save-settings-btn" id="save-settings">Save Settings</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Game Screen -->
+  <div id="game-screen">
+    <div class="game-header">
+      <div class="current-game-info">
+        <span class="current-game-name" id="current-game-name">Game Name</span>
+        <div class="round-indicator">
+          <span>Round:</span>
+          <div class="round-dot" id="round-dot-1"></div>
+          <div class="round-dot" id="round-dot-2"></div>
+        </div>
+      </div>
+      <div class="progress-info">
+        <span class="games-progress">Game <span id="current-game-num">1</span> of <span id="total-games-num">5</span></span>
+        <button class="exit-button" id="test-r34-btn" style="background: #555; margin-right: 10px;" title="Test Rule34 API">🎨 Test</button>
+        <button class="exit-button" id="exit-btn">Exit</button>
+      </div>
+    </div>
+    <div class="game-iframe-container" id="game-iframe-container">
+      <iframe id="game-iframe" class="game-iframe" sandbox="allow-scripts allow-same-origin allow-forms allow-popups"></iframe>
+    </div>
+    <button class="round-complete-btn" id="round-complete-btn">Round Complete ▶</button>
+    
+    <!-- Reinforcement Side Panel -->
+    <div id="reinforcement-panel">
+      <div id="reinforcement-images-container"></div>
+    </div>
+  </div>
+
+  <!-- Transition Overlay -->
+  <div id="transition-overlay">
+    <div class="transition-content">
+      <p class="transition-title">NEXT GAME</p>
+      <h2 class="transition-game-name" id="transition-game-name">Game Name</h2>
+      <div class="transition-countdown" id="transition-countdown">3</div>
+    </div>
+  </div>
+
+  <!-- Complete Screen -->
+  <div id="complete-screen">
+    <h1 class="complete-title">Training Complete!</h1>
+    <p class="complete-stats">You completed <span id="completed-games-count">0</span> games</p>
+    <button class="restart-button" id="restart-btn">Train Again</button>
+  </div>
+
+  <script>
+    // Settings storage key
+    const SETTINGS_KEY = 'brainTrainHubSettings';
+
+    // Default settings - FULL comprehensive
+    const DEFAULT_SETTINGS = {
+      mot: { 
+        // Core
+        level: 4,
+        distractors: 4,
+        coloredDistractors: 0,
+        ballSpeed: 35,
+        autoProgression: true,
+        // Timing
+        highlightDuration: 1200,
+        delayAfter: 7500,
+        startDelay: 500,
+        trialEndDelay: 1200,
+        highlightSimultaneously: true,
+        // Box & Appearance
+        boxX: 45,
+        boxY: 30,
+        boxZ: 25,
+        ballRadius: 18,
+        boxTexture: 'Gray',
+        ballOpacity: 94,
+        ballMetalness: 65,
+        ballRoughness: 30,
+        // Camera & Display
+        fov: 75,
+        graphics: 'Default',
+        // Rotation
+        screenRotation: false,
+        rotateX: true,
+        rotateY: true,
+        rotateZ: true,
+        // Center Dot
+        dotSize: 12,
+        blinkDot: true,
+        // Divider
+        divider: 'none'
+      },
+      syllogimous: { 
+        // Core
+        premises: 3,
+        timer: 30,
+        useTimer: false,
+        // Game modes
+        distinction: true,
+        linear: true,
+        syllogism: true,
+        direction: false,
+        direction3d: false,
+        direction4d: false,
+        analogy: false,
+        binary: false,
+        anchorSpace: false,
+        meta: false,
+        // Exclusive modes
+        onlyAnalogy: false,
+        onlyBinary: false,
+        // Modifiers
+        negation: false,
+        meaningfulWords: false,
+        nonsenseWords: false,
+        emoji: false,
+        garbageWords: false,
+        junkEmoji: false,
+        // Advanced
+        carousel: false,
+        minimalMode: false,
+        widePremises: false,
+        spoilerConclusion: false,
+        backtrackingLinear: false,
+        connectionBranching: false,
+        // Transforms
+        transformSet: false,
+        transformMirror: false,
+        transformScale: false,
+        transformRotate: false,
+        transformInterleave: false,
+        // Visual
+        visualNoise: false,
+        // Hard mode levels
+        space2DHardMode: 0,
+        space3DHardMode: 0,
+        space4DHardMode: 0,
+        scrambleFactor: 12,
+        // Binary depth
+        maxNestedBinaryDepth: 1,
+        // Auto progression
+        autoProgression: false
+      },
+      epson: { 
+        mode: 'multi', 
+        range: 10,
+        showErrors: true,
+        tier2: false,
+        tier3: false
+      },
+      peripheral: { 
+        level: 1, 
+        duration: 60 
+      },
+      reading: { 
+        // Core
+        speed: 297,
+        textSize: 42,
+        // Letter manipulations
+        skipLetters: 'no',
+        shuffleLetters: 'no',
+        reverseLetters: 'no',
+        falseLetters: 'no',
+        eliminatingLetters: 'no',
+        rotatingLetters: 'no',
+        mirroringLetters: 'no',
+        // Word manipulations
+        shuffleWords: 'no',
+        skipWords: 'no',
+        falseWords: 'no',
+        concatWords: 'no',
+        rotateWords: 'no',
+        mirrorWords: 'no',
+        // Sentence manipulations
+        shuffleSentences: 'no',
+        // ROT-N cipher
+        rotNEnabled: false,
+        rotNMin: 1,
+        rotNMax: 1,
+        // Skewing
+        skewingEnabled: false,
+        skewingMin: -30,
+        skewingMax: 30,
+        // Display
+        textDirection: 'ltr',
+        rsvpMode: false
+      },
+      bridge: { 
+        model: 'gemini-2.5-flash',
+        autostart: true 
+      },
+      reinforcement: {
+        enabled: false,
+        userId: '',
+        apiKey: '',
+        likedTags: '',
+        hatedTags: ''
+      }
+    };
+
+    // Load settings from localStorage
+    function loadSettings() {
+      try {
+        const saved = localStorage.getItem(SETTINGS_KEY);
+        if (saved) {
+          return { ...DEFAULT_SETTINGS, ...JSON.parse(saved) };
+        }
+      } catch (e) {
+        console.warn('Error loading settings:', e);
+      }
+      return { ...DEFAULT_SETTINGS };
+    }
+
+    // Save settings to localStorage
+    function saveSettings(settings) {
+      try {
+        localStorage.setItem(SETTINGS_KEY, JSON.stringify(settings));
+      } catch (e) {
+        console.warn('Error saving settings:', e);
+      }
+    }
+
+    // Current settings
+    let gameSettings = loadSettings();
+
+    // Game definitions
+    const GAMES = [
+      {
+        id: 'syllogimous',
+        name: 'Syllogimous',
+        description: 'Logic and syllogism training with premises and conclusions',
+        icon: '🧠',
+        path: 'Syllogimous-v3/index.html'
+      },
+      {
+        id: '3d-mot',
+        name: '3D MOT',
+        description: 'Multiple Object Tracking in 3D space',
+        icon: '🎯',
+        path: 'just-3d-mot.netlify.app/index.html'
+      },
+      {
+        id: 'trial-reading',
+        name: 'Trial & Error Reading',
+        description: 'Decode manipulated text to improve pattern recognition',
+        icon: '📖',
+        path: 'dolev765.github.io/Trial-and-Error-Reading/index.html'
+      },
+      {
+        id: 'peripheral',
+        name: 'Peripheral Trainer',
+        description: 'Expand your peripheral vision awareness',
+        icon: '👁️',
+        path: 'https://peripheraltrainer.netlify.app/'
+      },
+      {
+        id: 'brainepson',
+        name: 'Brain Train Epson',
+        description: 'Mental arithmetic and calculation training',
+        icon: '🔢',
+        path: 'dolev765.github.io/braintrainepson/index.html'
+      },
+      {
+        id: 'bridge-analogy',
+        name: 'Bridge Analogy',
+        description: 'Analogical reasoning and relationship patterns',
+        icon: '🌉',
+        path: 'bridge analogy/dist/index.html'
+      }
+    ];
+
+    // State
+    let selectedGames = new Set();
+    let gameQueue = [];
+    let currentGameIndex = 0;
+    let currentRound = 0;
+    const ROUNDS_PER_GAME = 2;
+
+    // DOM Elements
+    const selectionScreen = document.getElementById('selection-screen');
+    const gameScreen = document.getElementById('game-screen');
+    const transitionOverlay = document.getElementById('transition-overlay');
+    const completeScreen = document.getElementById('complete-screen');
+    const gamesGrid = document.getElementById('games-grid');
+    const selectedCountEl = document.getElementById('selected-count');
+    const startBtn = document.getElementById('start-btn');
+    const settingsBtn = document.getElementById('settings-btn');
+    const exitBtn = document.getElementById('exit-btn');
+    const restartBtn = document.getElementById('restart-btn');
+    const roundCompleteBtn = document.getElementById('round-complete-btn');
+    const gameIframe = document.getElementById('game-iframe');
+    const currentGameNameEl = document.getElementById('current-game-name');
+    const currentGameNumEl = document.getElementById('current-game-num');
+    const totalGamesNumEl = document.getElementById('total-games-num');
+    const transitionGameNameEl = document.getElementById('transition-game-name');
+    const transitionCountdownEl = document.getElementById('transition-countdown');
+    const completedGamesCountEl = document.getElementById('completed-games-count');
+    const roundDot1 = document.getElementById('round-dot-1');
+    const roundDot2 = document.getElementById('round-dot-2');
+
+    // Settings Modal Elements
+    const settingsModal = document.getElementById('settings-modal');
+    const closeSettingsBtn = document.getElementById('close-settings');
+    const saveSettingsBtn = document.getElementById('save-settings');
+    const apiKeyModal = document.getElementById('api-key-modal');
+    const closeApiKeyBtn = document.getElementById('close-api-key');
+    const saveApiKeyBtn = document.getElementById('save-api-key');
+    const cancelApiKeyBtn = document.getElementById('cancel-api-key');
+    const apiKeyInput = document.getElementById('api-key-input');
+    
+    let apiKeyModalCallback = null;
+
+    // Toggle settings group collapse
+    window.toggleSettingsGroup = function(header) {
+      const group = header.parentElement;
+      group.classList.toggle('expanded');
+    };
+
+    // Tab switching
+    function initSettingsTabs() {
+      const tabs = document.querySelectorAll('.settings-tab');
+      const panels = document.querySelectorAll('.settings-panel');
+      
+      tabs.forEach(tab => {
+        tab.addEventListener('click', () => {
+          tabs.forEach(t => t.classList.remove('active'));
+          panels.forEach(p => p.classList.remove('active'));
+          
+          tab.classList.add('active');
+          const panelId = 'panel-' + tab.dataset.panel;
+          document.getElementById(panelId)?.classList.add('active');
+        });
+      });
+    }
+
+    // API Key Modal Functions
+    function openApiKeyModal(callback) {
+      apiKeyModalCallback = callback;
+      // Load saved API key if exists
+      const savedKey = localStorage.getItem('bridge_analogy_api_key');
+      if (savedKey) {
+        apiKeyInput.value = savedKey;
+      } else {
+        apiKeyInput.value = '';
+      }
+      apiKeyModal.classList.add('active');
+      apiKeyInput.focus();
+    }
+    
+    function closeApiKeyModal() {
+      apiKeyModal.classList.remove('active');
+      apiKeyModalCallback = null;
+      apiKeyInput.value = '';
+    }
+    
+    function saveApiKey() {
+      const apiKey = apiKeyInput.value.trim();
+      if (!apiKey) {
+        alert('Please enter an API key');
+        return;
+      }
+      // Save to localStorage
+      localStorage.setItem('bridge_analogy_api_key', apiKey);
+      closeApiKeyModal();
+      // Execute callback if provided
+      if (apiKeyModalCallback) {
+        apiKeyModalCallback();
+        apiKeyModalCallback = null;
+      }
+    }
+
+    // Settings Modal Functions
+    function openSettingsModal() {
+      const m = gameSettings.mot;
+      const s = gameSettings.syllogimous;
+      const e = gameSettings.epson;
+      const p = gameSettings.peripheral;
+      const r = gameSettings.reading;
+      
+      // Quick Settings
+      setVal('mot-balls', m.level);
+      setVal('mot-speed', Math.round(m.ballSpeed / 10) || 5);
+      setVal('mot-speed-val', Math.round(m.ballSpeed / 10) || 5);
+      setVal('syllogimous-difficulty', s.premises <= 2 ? 1 : s.premises <= 3 ? 2 : s.premises <= 4 ? 3 : 4);
+      setVal('epson-mode', e.mode);
+      setVal('reading-speed', r.speed);
+      
+      // 3D MOT panel - Core
+      setVal('mot-level', m.level);
+      setVal('mot-distractors', m.distractors);
+      setVal('mot-colored-distractors', m.coloredDistractors || 0);
+      setVal('mot-ball-speed', m.ballSpeed);
+      setVal('mot-ball-speed-val', (m.ballSpeed / 100).toFixed(2));
+      setChecked('mot-auto-progression', m.autoProgression);
+      // Timing
+      setVal('mot-highlight-duration', m.highlightDuration);
+      setVal('mot-delay-after', m.delayAfter);
+      setVal('mot-start-delay', m.startDelay);
+      setVal('mot-end-delay', m.trialEndDelay || 1200);
+      setChecked('mot-highlight-simul', m.highlightSimultaneously !== false);
+      // Box & Appearance
+      setVal('mot-box-x', m.boxX);
+      setVal('mot-box-y', m.boxY);
+      setVal('mot-box-z', m.boxZ);
+      setVal('mot-ball-radius', m.ballRadius);
+      setVal('mot-ball-radius-val', (m.ballRadius / 10).toFixed(1));
+      setVal('mot-ball-opacity', m.ballOpacity || 94);
+      setVal('mot-ball-opacity-val', ((m.ballOpacity || 94) / 100).toFixed(2));
+      setVal('mot-ball-metalness', m.ballMetalness || 65);
+      setVal('mot-ball-metalness-val', ((m.ballMetalness || 65) / 100).toFixed(2));
+      setVal('mot-box-texture', m.boxTexture);
+      // Rotation & Camera
+      setChecked('mot-screen-rotation', m.screenRotation);
+      setChecked('mot-rotate-x', m.rotateX !== false);
+      setChecked('mot-rotate-y', m.rotateY !== false);
+      setChecked('mot-rotate-z', m.rotateZ !== false);
+      setVal('mot-fov', m.fov || 75);
+      setVal('mot-graphics', m.graphics || 'Default');
+      // Center Dot & Divider
+      setVal('mot-dot-size', m.dotSize || 12);
+      setChecked('mot-blink-dot', m.blinkDot !== false);
+      setVal('mot-divider', m.divider || 'none');
+      
+      // Syllogimous panel - Core
+      setVal('syl-premises', s.premises);
+      setVal('syl-timer', s.timer);
+      setChecked('syl-use-timer', s.useTimer);
+      setChecked('syl-auto-progression', s.autoProgression);
+      // Game modes
+      setChecked('syl-distinction', s.distinction);
+      setChecked('syl-linear', s.linear);
+      setChecked('syl-syllogism', s.syllogism);
+      setChecked('syl-direction', s.direction);
+      setChecked('syl-direction3d', s.direction3d);
+      setChecked('syl-direction4d', s.direction4d);
+      setChecked('syl-anchor-space', s.anchorSpace);
+      setChecked('syl-analogy', s.analogy);
+      setChecked('syl-binary', s.binary);
+      setChecked('syl-meta', s.meta);
+      // Exclusive
+      setChecked('syl-only-analogy', s.onlyAnalogy);
+      setChecked('syl-only-binary', s.onlyBinary);
+      setVal('syl-binary-depth', s.maxNestedBinaryDepth || 1);
+      // Word modifiers
+      setChecked('syl-meaningful-words', s.meaningfulWords);
+      setChecked('syl-nonsense-words', s.nonsenseWords);
+      setChecked('syl-garbage-words', s.garbageWords);
+      setChecked('syl-emoji', s.emoji);
+      setChecked('syl-junk-emoji', s.junkEmoji);
+      // Logic modifiers
+      setChecked('syl-negation', s.negation);
+      setChecked('syl-backtracking', s.backtrackingLinear);
+      setChecked('syl-branching', s.connectionBranching);
+      // Transforms
+      setChecked('syl-transform-set', s.transformSet);
+      setChecked('syl-transform-mirror', s.transformMirror);
+      setChecked('syl-transform-scale', s.transformScale);
+      setChecked('syl-transform-rotate', s.transformRotate);
+      setChecked('syl-transform-interleave', s.transformInterleave);
+      // Display
+      setVal('syl-scramble', s.scrambleFactor || 12);
+      setVal('syl-2d-hard', s.space2DHardMode || 0);
+      setVal('syl-3d-hard', s.space3DHardMode || 0);
+      setVal('syl-4d-hard', s.space4DHardMode || 0);
+      setChecked('syl-visual-noise', s.visualNoise);
+      setChecked('syl-carousel', s.carousel);
+      setChecked('syl-minimal', s.minimalMode);
+      setChecked('syl-wide', s.widePremises);
+      setChecked('syl-spoiler', s.spoilerConclusion);
+      
+      // Epson panel
+      setVal('epson-mode-full', e.mode);
+      setVal('epson-range-full', e.range);
+      setChecked('epson-show-errors', e.showErrors !== false);
+      setChecked('epson-tier2', e.tier2);
+      setChecked('epson-tier3', e.tier3);
+      
+      // Peripheral panel
+      setVal('peripheral-level', p.level);
+      setVal('peripheral-duration', p.duration);
+      
+      // Reading panel - Core
+      setVal('reading-speed-full', r.speed);
+      setVal('reading-text-size', r.textSize);
+      setVal('reading-direction', r.textDirection || 'ltr');
+      setChecked('reading-rsvp', r.rsvpMode);
+      // Letter manipulations
+      setVal('reading-skip-letters', r.skipLetters);
+      setVal('reading-shuffle-letters', r.shuffleLetters);
+      setVal('reading-reverse-letters', r.reverseLetters);
+      setVal('reading-false-letters', r.falseLetters || 'no');
+      setVal('reading-eliminate-letters', r.eliminatingLetters || 'no');
+      setVal('reading-rotate-letters', r.rotatingLetters || 'no');
+      setVal('reading-mirror-letters', r.mirroringLetters || 'no');
+      // Word manipulations
+      setVal('reading-shuffle-words', r.shuffleWords);
+      setVal('reading-skip-words', r.skipWords);
+      setVal('reading-false-words', r.falseWords || 'no');
+      setVal('reading-concat-words', r.concatWords || 'no');
+      setVal('reading-rotate-words', r.rotateWords);
+      setVal('reading-mirror-words', r.mirrorWords);
+      // Sentence
+      setVal('reading-shuffle-sentences', r.shuffleSentences || 'no');
+      // ROT-N
+      setChecked('reading-rotn-enabled', r.rotNEnabled);
+      setVal('reading-rotn-min', r.rotNMin || 1);
+      setVal('reading-rotn-max', r.rotNMax || 1);
+      // Skewing
+      setChecked('reading-skew-enabled', r.skewingEnabled);
+      setVal('reading-skew-min', r.skewingMin || -30);
+      setVal('reading-skew-max', r.skewingMax || 30);
+      
+      // Bridge Analogy panel
+      const b = gameSettings.bridge;
+      setVal('bridge-model', b.model || 'gemini-2.5-flash');
+      setChecked('bridge-autostart', b.autostart !== false);
+      // Load API key from localStorage
+      const savedApiKey = localStorage.getItem('bridge_analogy_api_key');
+      if (savedApiKey) {
+        setVal('bridge-api-key', savedApiKey);
+      } else {
+        setVal('bridge-api-key', '');
+      }
+      
+      // Reinforcement panel
+      const rf = gameSettings.reinforcement || {};
+      setChecked('reinforcement-enabled', rf.enabled);
+      setVal('reinforcement-user-id', rf.userId || '');
+      setVal('reinforcement-api-key', rf.apiKey || '');
+      setVal('reinforcement-liked-tags', rf.likedTags || '');
+      setVal('reinforcement-hated-tags', rf.hatedTags || '');
+      
+      settingsModal.classList.add('active');
+    }
+
+    function setVal(id, val) {
+      const el = document.getElementById(id);
+      if (el) el.value = val;
+    }
+    
+    function setChecked(id, val) {
+      const el = document.getElementById(id);
+      if (el) el.checked = val;
+    }
+    
+    function getVal(id, def) {
+      const el = document.getElementById(id);
+      return el ? el.value : def;
+    }
+    
+    function getNum(id, def) {
+      const el = document.getElementById(id);
+      return el ? (parseInt(el.value) || def) : def;
+    }
+    
+    function getChecked(id) {
+      const el = document.getElementById(id);
+      return el ? el.checked : false;
+    }
+
+    function closeSettingsModal() {
+      settingsModal.classList.remove('active');
+    }
+
+    function saveSettingsFromForm() {
+      // Sync quick settings
+      const quickMotBalls = getNum('mot-balls', 4);
+      const quickMotSpeed = getNum('mot-speed', 5);
+      const quickReadingSpeed = getNum('reading-speed', 297);
+      
+      gameSettings = {
+        mot: {
+          level: getNum('mot-level', quickMotBalls),
+          distractors: getNum('mot-distractors', 4),
+          coloredDistractors: getNum('mot-colored-distractors', 0),
+          ballSpeed: getNum('mot-ball-speed', 35),
+          autoProgression: getChecked('mot-auto-progression'),
+          highlightDuration: getNum('mot-highlight-duration', 1200),
+          delayAfter: getNum('mot-delay-after', 7500),
+          startDelay: getNum('mot-start-delay', 500),
+          trialEndDelay: getNum('mot-end-delay', 1200),
+          highlightSimultaneously: getChecked('mot-highlight-simul'),
+          boxX: getNum('mot-box-x', 45),
+          boxY: getNum('mot-box-y', 30),
+          boxZ: getNum('mot-box-z', 25),
+          ballRadius: getNum('mot-ball-radius', 18),
+          ballOpacity: getNum('mot-ball-opacity', 94),
+          ballMetalness: getNum('mot-ball-metalness', 65),
+          boxTexture: getVal('mot-box-texture', 'Gray'),
+          screenRotation: getChecked('mot-screen-rotation'),
+          rotateX: getChecked('mot-rotate-x'),
+          rotateY: getChecked('mot-rotate-y'),
+          rotateZ: getChecked('mot-rotate-z'),
+          fov: getNum('mot-fov', 75),
+          graphics: getVal('mot-graphics', 'Default'),
+          dotSize: getNum('mot-dot-size', 12),
+          blinkDot: getChecked('mot-blink-dot'),
+          divider: getVal('mot-divider', 'none')
+        },
+        syllogimous: {
+          premises: getNum('syl-premises', 3),
+          timer: getNum('syl-timer', 30),
+          useTimer: getChecked('syl-use-timer'),
+          autoProgression: getChecked('syl-auto-progression'),
+          // Game modes
+          distinction: getChecked('syl-distinction'),
+          linear: getChecked('syl-linear'),
+          syllogism: getChecked('syl-syllogism'),
+          direction: getChecked('syl-direction'),
+          direction3d: getChecked('syl-direction3d'),
+          direction4d: getChecked('syl-direction4d'),
+          anchorSpace: getChecked('syl-anchor-space'),
+          analogy: getChecked('syl-analogy'),
+          binary: getChecked('syl-binary'),
+          meta: getChecked('syl-meta'),
+          // Exclusive
+          onlyAnalogy: getChecked('syl-only-analogy'),
+          onlyBinary: getChecked('syl-only-binary'),
+          maxNestedBinaryDepth: getNum('syl-binary-depth', 1),
+          // Word modifiers
+          meaningfulWords: getChecked('syl-meaningful-words'),
+          nonsenseWords: getChecked('syl-nonsense-words'),
+          garbageWords: getChecked('syl-garbage-words'),
+          emoji: getChecked('syl-emoji'),
+          junkEmoji: getChecked('syl-junk-emoji'),
+          // Logic modifiers
+          negation: getChecked('syl-negation'),
+          backtrackingLinear: getChecked('syl-backtracking'),
+          connectionBranching: getChecked('syl-branching'),
+          // Transforms
+          transformSet: getChecked('syl-transform-set'),
+          transformMirror: getChecked('syl-transform-mirror'),
+          transformScale: getChecked('syl-transform-scale'),
+          transformRotate: getChecked('syl-transform-rotate'),
+          transformInterleave: getChecked('syl-transform-interleave'),
+          // Display
+          scrambleFactor: getNum('syl-scramble', 12),
+          space2DHardMode: getNum('syl-2d-hard', 0),
+          space3DHardMode: getNum('syl-3d-hard', 0),
+          space4DHardMode: getNum('syl-4d-hard', 0),
+          visualNoise: getChecked('syl-visual-noise'),
+          carousel: getChecked('syl-carousel'),
+          minimalMode: getChecked('syl-minimal'),
+          widePremises: getChecked('syl-wide'),
+          spoilerConclusion: getChecked('syl-spoiler')
+        },
+        epson: {
+          mode: getVal('epson-mode-full', getVal('epson-mode', 'multi')),
+          range: getNum('epson-range-full', 10),
+          showErrors: getChecked('epson-show-errors'),
+          tier2: getChecked('epson-tier2'),
+          tier3: getChecked('epson-tier3')
+        },
+        peripheral: {
+          level: getNum('peripheral-level', 1),
+          duration: getNum('peripheral-duration', 60)
+        },
+        reading: {
+          speed: getNum('reading-speed-full', quickReadingSpeed),
+          textSize: getNum('reading-text-size', 42),
+          textDirection: getVal('reading-direction', 'ltr'),
+          rsvpMode: getChecked('reading-rsvp'),
+          // Letter manipulations
+          skipLetters: getVal('reading-skip-letters', 'no'),
+          shuffleLetters: getVal('reading-shuffle-letters', 'no'),
+          reverseLetters: getVal('reading-reverse-letters', 'no'),
+          falseLetters: getVal('reading-false-letters', 'no'),
+          eliminatingLetters: getVal('reading-eliminate-letters', 'no'),
+          rotatingLetters: getVal('reading-rotate-letters', 'no'),
+          mirroringLetters: getVal('reading-mirror-letters', 'no'),
+          // Word manipulations
+          shuffleWords: getVal('reading-shuffle-words', 'no'),
+          skipWords: getVal('reading-skip-words', 'no'),
+          falseWords: getVal('reading-false-words', 'no'),
+          concatWords: getVal('reading-concat-words', 'no'),
+          rotateWords: getVal('reading-rotate-words', 'no'),
+          mirrorWords: getVal('reading-mirror-words', 'no'),
+          // Sentence
+          shuffleSentences: getVal('reading-shuffle-sentences', 'no'),
+          // ROT-N
+          rotNEnabled: getChecked('reading-rotn-enabled'),
+          rotNMin: getNum('reading-rotn-min', 1),
+          rotNMax: getNum('reading-rotn-max', 1),
+          // Skewing
+          skewingEnabled: getChecked('reading-skew-enabled'),
+          skewingMin: getNum('reading-skew-min', -30),
+          skewingMax: getNum('reading-skew-max', 30)
+        },
+        bridge: { 
+          model: getVal('bridge-model', 'gemini-2.5-flash'),
+          autostart: getChecked('bridge-autostart')
+        },
+        reinforcement: {
+          enabled: getChecked('reinforcement-enabled'),
+          userId: getVal('reinforcement-user-id', '').trim(),
+          apiKey: getVal('reinforcement-api-key', '').trim(),
+          likedTags: getVal('reinforcement-liked-tags', '').trim(),
+          hatedTags: getVal('reinforcement-hated-tags', '').trim()
+        }
+      };
+      
+      // Save API key to localStorage if provided
+      const apiKeyInput = document.getElementById('bridge-api-key');
+      if (apiKeyInput && apiKeyInput.value.trim()) {
+        localStorage.setItem('bridge_analogy_api_key', apiKeyInput.value.trim());
+      }
+      
+      saveSettings(gameSettings);
+      closeSettingsModal();
+    }
+
+    // Update slider displays
+    document.getElementById('mot-speed')?.addEventListener('input', (e) => {
+      document.getElementById('mot-speed-val').textContent = e.target.value;
+    });
+    document.getElementById('mot-ball-speed')?.addEventListener('input', (e) => {
+      document.getElementById('mot-ball-speed-val').textContent = (e.target.value / 100).toFixed(2);
+    });
+    document.getElementById('mot-ball-radius')?.addEventListener('input', (e) => {
+      document.getElementById('mot-ball-radius-val').textContent = (e.target.value / 10).toFixed(1);
+    });
+    document.getElementById('mot-ball-opacity')?.addEventListener('input', (e) => {
+      document.getElementById('mot-ball-opacity-val').textContent = (e.target.value / 100).toFixed(2);
+    });
+    document.getElementById('mot-ball-metalness')?.addEventListener('input', (e) => {
+      document.getElementById('mot-ball-metalness-val').textContent = (e.target.value / 100).toFixed(2);
+    });
+
+    // Initialize tabs
+    initSettingsTabs();
+
+    // Initialize game cards
+    function initGameCards() {
+      gamesGrid.innerHTML = '';
+      GAMES.forEach(game => {
+        const card = document.createElement('div');
+        card.className = 'game-card';
+        card.dataset.gameId = game.id;
+        card.innerHTML = `
+          <div class="game-checkbox"></div>
+          <div class="game-icon">${game.icon}</div>
+          <h3 class="game-name">${game.name}</h3>
+          <p class="game-description">${game.description}</p>
+        `;
+        card.addEventListener('click', () => toggleGameSelection(game.id, card));
+        gamesGrid.appendChild(card);
+      });
+    }
+
+    function toggleGameSelection(gameId, card) {
+      if (selectedGames.has(gameId)) {
+        selectedGames.delete(gameId);
+        card.classList.remove('selected');
+      } else {
+        // Check if Bridge Analogy requires API key
+        if (gameId === 'bridge-analogy') {
+          const savedApiKey = localStorage.getItem('bridge_analogy_api_key');
+          if (!savedApiKey) {
+            // Show API key modal
+            openApiKeyModal(() => {
+              // Callback when API key is saved
+              selectedGames.add(gameId);
+              card.classList.add('selected');
+              updateSelectionCount();
+            });
+            return;
+          }
+        }
+        selectedGames.add(gameId);
+        card.classList.add('selected');
+      }
+      updateSelectionCount();
+    }
+
+    function updateSelectionCount() {
+      selectedCountEl.textContent = selectedGames.size;
+      startBtn.disabled = selectedGames.size === 0;
+    }
+
+    // Shuffle array
+    function shuffleArray(array) {
+      const arr = [...array];
+      for (let i = arr.length - 1; i > 0; i--) {
+        const j = Math.floor(Math.random() * (i + 1));
+        [arr[i], arr[j]] = [arr[j], arr[i]];
+      }
+      return arr;
+    }
+
+    // Start training
+    function startTraining() {
+      // Build shuffled queue from selected games
+      const selectedGamesList = GAMES.filter(g => selectedGames.has(g.id));
+      gameQueue = shuffleArray(selectedGamesList);
+      currentGameIndex = 0;
+      currentRound = 0;
+
+      selectionScreen.style.display = 'none';
+      totalGamesNumEl.textContent = gameQueue.length;
+      
+      // Setup reinforcement panel based on settings
+      if (reinforcementPanel && gameIframeContainer && reinforcementImagesContainer) {
+        reinforcementImagesContainer.innerHTML = '';
+        
+        if (gameSettings.reinforcement && gameSettings.reinforcement.enabled) {
+          // Show panel and adjust layout for reinforcement
+          reinforcementPanel.classList.add('visible');
+          gameIframeContainer.classList.add('with-reinforcement');
+          
+          // Show initial waiting message
+          reinforcementImagesContainer.innerHTML = `
+            <div style="text-align: center; padding: 40px; color: #888;">
+              <div style="font-size: 3em; margin-bottom: 20px;">🎮</div>
+              <div>Complete a round to see reinforcement</div>
+            </div>
+          `;
+        } else {
+          reinforcementPanel.classList.remove('visible');
+          gameIframeContainer.classList.remove('with-reinforcement');
+        }
+      }
+      
+      showTransition(gameQueue[0], () => {
+        loadGame(gameQueue[0]);
+      });
+    }
+
+    // Show transition screen (instant - no countdown)
+    function showTransition(game, callback) {
+      // Instant transition - just load the game immediately
+      callback();
+    }
+
+    // Build game URL with settings
+    function buildGameUrl(game) {
+      let url = game.path;
+      const params = new URLSearchParams();
+      const m = gameSettings.mot;
+      const s = gameSettings.syllogimous;
+      const e = gameSettings.epson;
+      const p = gameSettings.peripheral;
+      const r = gameSettings.reading;
+      
+      // Add autostart parameter for all games
+      params.set('autostart', 'true');
+      params.set('hub', 'true');
+      
+      // Add game-specific settings
+      switch (game.id) {
+        case '3d-mot':
+          // Core
+          params.set('level', m.level);
+          params.set('distractors', m.distractors);
+          params.set('coloredDistractors', m.coloredDistractors || 0);
+          params.set('ballSpeed', m.ballSpeed);
+          params.set('autoProgression', m.autoProgression);
+          // Timing
+          params.set('highlightDuration', m.highlightDuration);
+          params.set('delayAfter', m.delayAfter);
+          params.set('startDelay', m.startDelay);
+          params.set('trialEndDelay', m.trialEndDelay || 1200);
+          params.set('highlightSimultaneously', m.highlightSimultaneously !== false);
+          // Box & Appearance
+          params.set('boxX', m.boxX);
+          params.set('boxY', m.boxY);
+          params.set('boxZ', m.boxZ);
+          params.set('ballRadius', m.ballRadius);
+          params.set('ballOpacity', m.ballOpacity || 94);
+          params.set('ballMetalness', m.ballMetalness || 65);
+          params.set('boxTexture', m.boxTexture);
+          // Rotation & Camera
+          params.set('screenRotation', m.screenRotation);
+          params.set('rotateX', m.rotateX !== false);
+          params.set('rotateY', m.rotateY !== false);
+          params.set('rotateZ', m.rotateZ !== false);
+          params.set('fov', m.fov || 75);
+          params.set('graphics', m.graphics || 'Default');
+          // Center Dot & Divider
+          params.set('dotSize', m.dotSize || 12);
+          params.set('blinkDot', m.blinkDot !== false);
+          params.set('divider', m.divider || 'none');
+          break;
+          
+        case 'syllogimous':
+          // Core
+          params.set('premises', s.premises);
+          params.set('timer', s.timer);
+          params.set('useTimer', s.useTimer);
+          params.set('autoProgression', s.autoProgression);
+          // Game modes
+          params.set('distinction', s.distinction);
+          params.set('linear', s.linear);
+          params.set('syllogism', s.syllogism);
+          params.set('direction', s.direction);
+          params.set('direction3d', s.direction3d);
+          params.set('direction4d', s.direction4d);
+          params.set('anchorSpace', s.anchorSpace);
+          params.set('analogy', s.analogy);
+          params.set('binary', s.binary);
+          params.set('meta', s.meta);
+          // Exclusive modes
+          params.set('onlyAnalogy', s.onlyAnalogy);
+          params.set('onlyBinary', s.onlyBinary);
+          params.set('maxNestedBinaryDepth', s.maxNestedBinaryDepth || 1);
+          // Word modifiers
+          params.set('meaningfulWords', s.meaningfulWords);
+          params.set('nonsenseWords', s.nonsenseWords);
+          params.set('garbageWords', s.garbageWords);
+          params.set('emoji', s.emoji);
+          params.set('junkEmoji', s.junkEmoji);
+          // Logic modifiers
+          params.set('negation', s.negation);
+          params.set('backtrackingLinear', s.backtrackingLinear);
+          params.set('connectionBranching', s.connectionBranching);
+          // Transforms
+          params.set('transformSet', s.transformSet);
+          params.set('transformMirror', s.transformMirror);
+          params.set('transformScale', s.transformScale);
+          params.set('transformRotate', s.transformRotate);
+          params.set('transformInterleave', s.transformInterleave);
+          // Display
+          params.set('scrambleFactor', s.scrambleFactor || 12);
+          params.set('space2DHardMode', s.space2DHardMode || 0);
+          params.set('space3DHardMode', s.space3DHardMode || 0);
+          params.set('space4DHardMode', s.space4DHardMode || 0);
+          params.set('visualNoise', s.visualNoise);
+          params.set('carousel', s.carousel);
+          params.set('minimalMode', s.minimalMode);
+          params.set('widePremises', s.widePremises);
+          params.set('spoilerConclusion', s.spoilerConclusion);
+          break;
+          
+        case 'brainepson':
+          params.set('mode', e.mode);
+          params.set('range', e.range);
+          params.set('showErrors', e.showErrors);
+          params.set('tier2', e.tier2);
+          params.set('tier3', e.tier3);
+          break;
+          
+        case 'peripheral':
+          params.set('level', p.level);
+          params.set('duration', p.duration);
+          break;
+          
+        case 'trial-reading':
+          // Core
+          params.set('speed', r.speed);
+          params.set('textSize', r.textSize);
+          params.set('textDirection', r.textDirection || 'ltr');
+          params.set('rsvpMode', r.rsvpMode);
+          // Letter manipulations
+          params.set('skipLetters', r.skipLetters);
+          params.set('shuffleLetters', r.shuffleLetters);
+          params.set('reverseLetters', r.reverseLetters);
+          params.set('falseLetters', r.falseLetters || 'no');
+          params.set('eliminatingLetters', r.eliminatingLetters || 'no');
+          params.set('rotatingLetters', r.rotatingLetters || 'no');
+          params.set('mirroringLetters', r.mirroringLetters || 'no');
+          // Word manipulations
+          params.set('shuffleWords', r.shuffleWords);
+          params.set('skipWords', r.skipWords);
+          params.set('falseWords', r.falseWords || 'no');
+          params.set('concatWords', r.concatWords || 'no');
+          params.set('rotateWords', r.rotateWords);
+          params.set('mirrorWords', r.mirrorWords);
+          // Sentence
+          params.set('shuffleSentences', r.shuffleSentences || 'no');
+          // ROT-N
+          params.set('rotNEnabled', r.rotNEnabled);
+          params.set('rotNMin', r.rotNMin || 1);
+          params.set('rotNMax', r.rotNMax || 1);
+          // Skewing
+          params.set('skewingEnabled', r.skewingEnabled);
+          params.set('skewingMin', r.skewingMin || -30);
+          params.set('skewingMax', r.skewingMax || 30);
+          break;
+          
+        case 'bridge-analogy':
+          params.set('autostart', gameSettings.bridge.autostart ? 'true' : 'false');
+          params.set('model', gameSettings.bridge.model || 'gemini-2.5-flash');
+          // Pass API key if available
+          const apiKey = localStorage.getItem('bridge_analogy_api_key');
+          if (apiKey) {
+            params.set('apiKey', apiKey);
+          }
+          break;
+      }
+      
+      // Handle external URLs (like Netlify)
+      if (url.startsWith('http')) {
+        const urlObj = new URL(url);
+        params.forEach((value, key) => urlObj.searchParams.set(key, value));
+        return urlObj.toString();
+      }
+      
+      // For local files, add query string
+      const separator = url.includes('?') ? '&' : '?';
+      return url + separator + params.toString();
+    }
+
+    // Load game in iframe
+    function loadGame(game) {
+      gameScreen.style.display = 'block';
+      currentGameNameEl.textContent = game.name;
+      currentGameNumEl.textContent = currentGameIndex + 1;
+      
+      // Reset round indicators
+      updateRoundIndicators();
+      
+      // Build URL with settings and load
+      const gameUrl = buildGameUrl(game);
+      gameIframe.src = gameUrl;
+      
+      // Send settings to iframe after it loads
+      gameIframe.onload = () => {
+        try {
+          const message = {
+            type: 'HUB_SETTINGS',
+            settings: gameSettings,
+            gameId: game.id,
+            autostart: true
+          };
+          
+          // Add API key and model for Bridge Analogy
+          if (game.id === 'bridge-analogy') {
+            const apiKey = localStorage.getItem('bridge_analogy_api_key');
+            if (apiKey) {
+              message.apiKey = apiKey;
+            }
+            if (gameSettings.bridge && gameSettings.bridge.model) {
+              message.model = gameSettings.bridge.model;
+            }
+          }
+          
+          gameIframe.contentWindow.postMessage(message, '*');
+        } catch (e) {
+          console.warn('Could not send settings to iframe:', e);
+        }
+      };
+    }
+
+    // Update round indicators
+    function updateRoundIndicators() {
+      roundDot1.className = 'round-dot';
+      roundDot2.className = 'round-dot';
+      
+      if (currentRound === 0) {
+        roundDot1.classList.add('current');
+      } else if (currentRound === 1) {
+        roundDot1.classList.add('completed');
+        roundDot2.classList.add('current');
+      } else {
+        roundDot1.classList.add('completed');
+        roundDot2.classList.add('completed');
+      }
+    }
+
+    // Handle round completion
+    function completeRound() {
+      currentRound++;
+      updateRoundIndicators();
+      
+      if (currentRound >= ROUNDS_PER_GAME) {
+        // Move to next game
+        currentGameIndex++;
+        currentRound = 0;
+        
+        // Loop infinitely - reset to first game when we reach the end
+        if (currentGameIndex >= gameQueue.length) {
+          currentGameIndex = 0;
+        }
+        
+        // Show transition to next game (instant)
+        gameScreen.style.display = 'none';
+        gameIframe.src = 'about:blank';
+        showTransition(gameQueue[currentGameIndex], () => {
+          loadGame(gameQueue[currentGameIndex]);
+        });
+      }
+    }
+
+    // Show completion screen
+    function showCompleteScreen() {
+      gameScreen.style.display = 'none';
+      gameIframe.src = 'about:blank';
+      completedGamesCountEl.textContent = gameQueue.length;
+      completeScreen.style.display = 'flex';
+    }
+
+    // Exit to selection
+    function exitToSelection() {
+      gameScreen.style.display = 'none';
+      completeScreen.style.display = 'none';
+      transitionOverlay.style.display = 'none';
+      gameIframe.src = 'about:blank';
+      selectionScreen.style.display = 'flex';
+      
+      // Hide reinforcement panel
+      if (reinforcementPanel && gameIframeContainer && reinforcementImagesContainer) {
+        reinforcementPanel.classList.remove('visible');
+        gameIframeContainer.classList.remove('with-reinforcement');
+        reinforcementImagesContainer.innerHTML = '';
+      }
+    }
+
+    // Track wins and losses
+    let totalWins = 0;
+    let totalLosses = 0;
+    
+    // Reinforcement panel elements (defined after DOM is ready)
+    let reinforcementPanel, reinforcementImagesContainer, gameIframeContainer;
+    
+    // Initialize reinforcement panel elements
+    function initReinforcementPanel() {
+      reinforcementPanel = document.getElementById('reinforcement-panel');
+      reinforcementImagesContainer = document.getElementById('reinforcement-images-container');
+      gameIframeContainer = document.getElementById('game-iframe-container');
+    }
+    
+    // Initialize on page load
+    if (document.readyState === 'loading') {
+      document.addEventListener('DOMContentLoaded', initReinforcementPanel);
+    } else {
+      initReinforcementPanel();
+    }
+    
+    // Rule34 API functions - replicating rule34Py logic
+    
+    // Parse XML response from Rule34 API (fallback if JSON fails)
+    function parseXMLPosts(xmlText) {
+      const posts = [];
+      try {
+        const parser = new DOMParser();
+        const doc = parser.parseFromString(xmlText, 'text/xml');
+        const postElements = doc.querySelectorAll('post');
+        
+        postElements.forEach(post => {
+          posts.push({
+            id: post.getAttribute('id'),
+            file_url: post.getAttribute('file_url'),
+            sample_url: post.getAttribute('sample_url'),
+            preview_url: post.getAttribute('preview_url'),
+            tags: post.getAttribute('tags')
+          });
+        });
+        
+        console.log('Parsed', posts.length, 'posts from XML');
+      } catch (e) {
+        console.error('XML parsing failed:', e);
+      }
+      return posts;
+    }
+    
+    // CORS proxies to try in order
+    const CORS_PROXIES = [
+      (url) => `https://corsproxy.io/?${encodeURIComponent(url)}`,
+      (url) => `https://api.allorigins.win/raw?url=${encodeURIComponent(url)}`,
+      (url) => `https://api.codetabs.com/v1/proxy?quest=${encodeURIComponent(url)}`
+    ];
+    
+    async function fetchRule34Image(tags, isPositive) {
+      if (!gameSettings.reinforcement || !gameSettings.reinforcement.enabled) {
+        console.log('Reinforcement not enabled');
+        return null;
+      }
+      
+      const { userId, apiKey, likedTags, hatedTags } = gameSettings.reinforcement;
+      console.log('Reinforcement settings:', { userId: userId ? '(set)' : '(not set)', apiKey: apiKey ? '(set)' : '(not set)', likedTags, hatedTags, isPositive });
+      
+      // Warn if no API key
+      if (!apiKey) {
+        console.warn('⚠️ No API key set! Rule34 API now requires authentication.');
+        console.warn('Get your API key from: https://rule34.xxx/index.php?page=account&s=options');
+      }
+      
+      // Use liked tags for wins, hated tags for losses
+      // Convert comma-separated tags to space-separated for API (like rule34Py)
+      let rawTags = isPositive 
+        ? (likedTags || 'cute').trim()
+        : (hatedTags || 'scary').trim();
+      
+      // Convert comma-separated to space-separated and encode properly
+      const tagArray = rawTags.split(',').map(t => t.trim()).filter(t => t);
+      const tagString = tagArray.join(' ');
+      
+      if (!tagString) {
+        console.warn('No tags configured for reinforcement');
+        return null;
+      }
+      
+      console.log('Fetching Rule34 image with tags:', tagString);
+      
+      try {
+        // Build API URL matching rule34Py format
+        const params = new URLSearchParams();
+        params.set('page', 'dapi');
+        params.set('s', 'post');
+        params.set('q', 'index');
+        params.set('tags', tagString);
+        params.set('limit', '100');  // Get more results for variety
+        params.set('pid', Math.floor(Math.random() * 10).toString()); // Random page 0-9
+        params.set('json', '1');
+        
+        // Add API credentials if provided (like rule34Py client.api_key and client.user_id)
+        if (userId && apiKey) {
+          params.set('api_key', apiKey);
+          params.set('user_id', userId);
+          console.log('Using API credentials for Rule34');
+        }
+        
+        // Try rule34.xxx first (may work without auth), then api.rule34.xxx
+        const endpoints = [
+          `https://rule34.xxx/index.php?${params.toString()}`,
+          `https://api.rule34.xxx/index.php?${params.toString()}`
+        ];
+        
+        console.log('Will try endpoints:', endpoints);
+        
+        let data = null;
+        let lastError = null;
+        
+        // Helper function to try fetching from a URL
+        const tryFetchUrl = async (url, label) => {
+          try {
+            console.log(`Trying ${label}:`, url);
+            const response = await fetch(url, { 
+              method: 'GET',
+              headers: { 'Accept': 'application/json' }
+            });
+            if (response.ok) {
+              const text = await response.text();
+              console.log(`${label} response (first 300 chars):`, text.substring(0, 300));
+              
+              // Check for auth error
+              if (text.includes('Missing authentication') || text.includes('authentication')) {
+                console.log(`${label}: Authentication required`);
+                return null;
+              }
+              
+              // Try JSON parse
+              try {
+                let parsed = JSON.parse(text);
+                if (typeof parsed === 'string') {
+                  parsed = JSON.parse(parsed);
+                }
+                if (Array.isArray(parsed) && parsed.length > 0) {
+                  console.log(`${label} succeeded with ${parsed.length} JSON posts`);
+                  return parsed;
+                }
+              } catch (parseErr) {
+                // Try XML parsing
+                if (text.includes('<posts') || text.includes('<post ')) {
+                  const xmlPosts = parseXMLPosts(text);
+                  if (xmlPosts.length > 0) {
+                    console.log(`${label} succeeded with ${xmlPosts.length} XML posts`);
+                    return xmlPosts;
+                  }
+                }
+              }
+            }
+          } catch (e) {
+            console.log(`${label} failed:`, e.message);
+          }
+          return null;
+        };
+        
+        // Try direct endpoints first
+        for (const endpoint of endpoints) {
+          data = await tryFetchUrl(endpoint, 'Direct');
+          if (data && data.length > 0) break;
+        }
+        
+        // If direct failed, try with CORS proxies
+        if (!data || data.length === 0) {
+          for (const endpoint of endpoints) {
+            for (let i = 0; i < CORS_PROXIES.length; i++) {
+              const proxyUrl = CORS_PROXIES[i](endpoint);
+              data = await tryFetchUrl(proxyUrl, `Proxy ${i + 1}`);
+              if (data && data.length > 0) break;
+            }
+            if (data && data.length > 0) break;
+          }
+        }
+        
+        if (!data) {
+          throw lastError || new Error('All API methods failed');
+        }
+        
+        console.log('Rule34 API response type:', typeof data, Array.isArray(data) ? `array[${data.length}]` : '');
+        console.log('Rule34 API data:', JSON.stringify(data).substring(0, 500));
+        
+        // Handle both array and object responses (rule34Py returns list of Post objects)
+        let posts = [];
+        if (Array.isArray(data)) {
+          posts = data;
+        } else if (typeof data === 'string') {
+          // Response is a string - try to parse as JSON
+          try {
+            const parsed = JSON.parse(data);
+            if (Array.isArray(parsed)) {
+              posts = parsed;
+            } else if (parsed && Array.isArray(parsed.post)) {
+              posts = parsed.post;
+            }
+          } catch (e) {
+            console.log('String data is not JSON');
+          }
+        } else if (data && Array.isArray(data.post)) {
+          posts = data.post;
+        } else if (data && data.post) {
+          posts = [data.post];
+        } else if (data && typeof data === 'object') {
+          // Try to find any array property
+          for (const key in data) {
+            if (Array.isArray(data[key]) && data[key].length > 0) {
+              posts = data[key];
+              console.log('Found posts in property:', key);
+              break;
+            }
+          }
+        }
+        
+        console.log('Parsed posts count:', posts.length);
+        
+        if (!posts || posts.length === 0) {
+          console.warn('No images found for tags:', tagString);
+          return null;
+        }
+        
+        // Get random post from results (like rule34Py random_post)
+        const post = posts[Math.floor(Math.random() * posts.length)];
+        console.log('Selected post:', { id: post.id, file_url: post.file_url, sample_url: post.sample_url });
+        
+        // rule34Py Post object has: file_url, sample_url, preview_url
+        if (!post || (!post.file_url && !post.sample_url)) {
+          console.warn('Post missing file_url:', post);
+          return null;
+        }
+        
+        return {
+          url: post.file_url || post.sample_url,
+          preview: post.sample_url || post.preview_url || post.file_url,
+          tags: post.tags || '',
+          id: post.id || ''
+        };
+      } catch (error) {
+        console.error('Error fetching Rule34 image:', error);
+        return null;
+      }
+    }
+    
+    async function showReinforcementImage(isWin) {
+      console.log('showReinforcementImage called:', { isWin, reinforcementEnabled: gameSettings.reinforcement?.enabled });
+      
+      if (!gameSettings.reinforcement || !gameSettings.reinforcement.enabled) {
+        console.log('Reinforcement not enabled, skipping');
+        return;
+      }
+      
+      // Ensure elements are initialized
+      if (!reinforcementPanel || !reinforcementImagesContainer || !gameIframeContainer) {
+        initReinforcementPanel();
+      }
+      
+      if (!reinforcementPanel || !reinforcementImagesContainer || !gameIframeContainer) {
+        console.warn('Reinforcement panel elements not found');
+        return;
+      }
+      
+      // Show panel and adjust game container
+      reinforcementPanel.classList.add('visible');
+      gameIframeContainer.classList.add('with-reinforcement');
+      console.log('Reinforcement panel shown');
+      
+      // Clear previous image (replace with new one)
+      reinforcementImagesContainer.innerHTML = '';
+      
+      // Show loading indicator
+      const loadingDiv = document.createElement('div');
+      loadingDiv.className = 'reinforcement-loading';
+      loadingDiv.innerHTML = `<div style="color: white; text-align: center; padding: 20px;">Loading ${isWin ? '✨' : '💀'}...</div>`;
+      reinforcementImagesContainer.appendChild(loadingDiv);
+      
+      // Fetch image
+      const imageData = await fetchRule34Image(null, isWin);
+      console.log('Fetched image data:', imageData);
+      
+      // Clear loading
+      reinforcementImagesContainer.innerHTML = '';
+      
+      if (!imageData) {
+        // Show placeholder if no image found
+        console.log('No image data found');
+        const placeholder = document.createElement('div');
+        placeholder.className = 'reinforcement-placeholder';
+        placeholder.innerHTML = `<div style="color: #888; text-align: center; padding: 40px; font-size: 3em;">${isWin ? '✅' : '❌'}</div>
+          <div style="color: #666; text-align: center;">No image found</div>`;
+        reinforcementImagesContainer.appendChild(placeholder);
+        return;
+      }
+      
+      // Create image container - stays until next round
+      const container = document.createElement('div');
+      container.className = `reinforcement-image-container ${isWin ? 'positive' : 'negative'}`;
+      container.style.cssText = 'position: relative; opacity: 1; transform: none;';
+      
+      const img = document.createElement('img');
+      img.className = 'reinforcement-image';
+      // Don't set crossOrigin - let browser handle it naturally for display
+      img.style.cssText = 'max-width: 100%; max-height: 80vh; object-fit: contain; display: block; margin: 0 auto;';
+      img.alt = `Reinforcement image (${isWin ? 'positive' : 'negative'})`;
+      
+      // Try preview first, then sample, then full URL
+      const urlsToTry = [
+        imageData.preview,
+        imageData.url
+      ].filter(u => u);
+      
+      let currentUrlIndex = 0;
+      
+      const tryLoadImage = () => {
+        if (currentUrlIndex >= urlsToTry.length) {
+          console.error('All image URLs failed to load');
+          img.alt = 'Failed to load image';
+          img.style.display = 'none';
+          const errorDiv = document.createElement('div');
+          errorDiv.style.cssText = 'color: #f55; text-align: center; padding: 20px;';
+          errorDiv.textContent = '⚠️ Image failed to load';
+          container.appendChild(errorDiv);
+          return;
+        }
+        const url = urlsToTry[currentUrlIndex];
+        console.log(`Trying image URL ${currentUrlIndex + 1}/${urlsToTry.length}:`, url);
+        img.src = url;
+      };
+      
+      img.onload = () => {
+        console.log('✅ Image loaded successfully:', img.src);
+      };
+      
+      img.onerror = () => {
+        console.warn(`❌ Image URL ${currentUrlIndex + 1} failed:`, urlsToTry[currentUrlIndex]);
+        currentUrlIndex++;
+        tryLoadImage();
+      };
+      
+      // Start loading
+      tryLoadImage();
+      
+      // Add result indicator
+      const indicator = document.createElement('div');
+      indicator.style.cssText = `
+        position: absolute;
+        top: 10px;
+        left: 10px;
+        font-size: 1.5em;
+        padding: 5px 10px;
+        background: ${isWin ? 'rgba(0,255,100,0.8)' : 'rgba(255,50,50,0.8)'};
+        border-radius: 5px;
+        color: white;
+        text-shadow: 1px 1px 2px rgba(0,0,0,0.5);
+        z-index: 10;
+      `;
+      indicator.textContent = isWin ? '✅ WIN' : '❌ LOSS';
+      
+      container.appendChild(indicator);
+      container.appendChild(img);
+      reinforcementImagesContainer.appendChild(container);
+      console.log('Image container added to DOM - will stay until next round replaces it');
+      
+      // NO auto-remove - image stays until next round replaces it
+    }
+
+    // Listen for messages from games
+    window.addEventListener('message', (event) => {
+      if (event.data && event.data.type === 'ROUND_COMPLETE') {
+        console.log('ROUND_COMPLETE received:', event.data);
+        
+        // Track win/loss if provided
+        const isWin = event.data.result === 'win' || event.data.result === 'correct';
+        console.log('Round result - isWin:', isWin, 'result value:', event.data.result);
+        
+        if (isWin) {
+          totalWins++;
+        } else if (event.data.result === 'loss' || event.data.result === 'incorrect') {
+          totalLosses++;
+        }
+        
+        // Show reinforcement image
+        console.log('Checking reinforcement:', gameSettings.reinforcement);
+        if (gameSettings.reinforcement && gameSettings.reinforcement.enabled) {
+          console.log('Calling showReinforcementImage...');
+          showReinforcementImage(isWin);
+        }
+        
+        completeRound();
+      }
+    });
+
+    // Event listeners
+    startBtn.addEventListener('click', startTraining);
+    settingsBtn.addEventListener('click', openSettingsModal);
+    closeSettingsBtn.addEventListener('click', closeSettingsModal);
+    saveSettingsBtn.addEventListener('click', saveSettingsFromForm);
+    exitBtn.addEventListener('click', exitToSelection);
+    restartBtn.addEventListener('click', exitToSelection);
+    roundCompleteBtn.addEventListener('click', completeRound);
+    
+    // Test R34 button
+    const testR34Btn = document.getElementById('test-r34-btn');
+    if (testR34Btn) {
+      testR34Btn.addEventListener('click', async () => {
+        console.log('Testing Rule34 API...');
+        console.log('Current reinforcement settings:', gameSettings.reinforcement);
+        
+        // Temporarily enable for test
+        const wasEnabled = gameSettings.reinforcement?.enabled;
+        if (gameSettings.reinforcement) {
+          gameSettings.reinforcement.enabled = true;
+        }
+        
+        // Test positive reinforcement
+        await showReinforcementImage(true);
+        
+        // Restore setting
+        if (gameSettings.reinforcement && !wasEnabled) {
+          gameSettings.reinforcement.enabled = wasEnabled;
+        }
+      });
+    }
+    
+    // Auto-parse Rule34 credentials when pasted
+    const credentialsPasteInput = document.getElementById('reinforcement-credentials-paste');
+    if (credentialsPasteInput) {
+      credentialsPasteInput.addEventListener('input', (e) => {
+        const value = e.target.value.trim();
+        
+        // Parse api_key
+        const apiKeyMatch = value.match(/api_key=([a-fA-F0-9]+)/);
+        if (apiKeyMatch) {
+          const apiKeyInput = document.getElementById('reinforcement-api-key');
+          if (apiKeyInput) {
+            apiKeyInput.value = apiKeyMatch[1];
+            apiKeyInput.style.borderColor = '#00ff88';
+            setTimeout(() => apiKeyInput.style.borderColor = '', 2000);
+          }
+        }
+        
+        // Parse user_id
+        const userIdMatch = value.match(/user_id=(\d+)/);
+        if (userIdMatch) {
+          const userIdInput = document.getElementById('reinforcement-user-id');
+          if (userIdInput) {
+            userIdInput.value = userIdMatch[1];
+            userIdInput.style.borderColor = '#00ff88';
+            setTimeout(() => userIdInput.style.borderColor = '', 2000);
+          }
+        }
+        
+        // Show success feedback
+        if (apiKeyMatch || userIdMatch) {
+          e.target.style.borderColor = '#00ff88';
+          e.target.placeholder = '✓ Credentials extracted!';
+          setTimeout(() => {
+            e.target.style.borderColor = '';
+            e.target.value = '';
+            e.target.placeholder = 'Paste: &api_key=xxx&user_id=xxx';
+          }, 2000);
+        }
+      });
+    }
+    
+    // API Key Modal event listeners
+    closeApiKeyBtn.addEventListener('click', closeApiKeyModal);
+    cancelApiKeyBtn.addEventListener('click', closeApiKeyModal);
+    saveApiKeyBtn.addEventListener('click', saveApiKey);
+    
+    // Close API key modal on overlay click
+    apiKeyModal.addEventListener('click', (e) => {
+      if (e.target === apiKeyModal) {
+        closeApiKeyModal();
+      }
+    });
+    
+    // Close API key modal on Escape key
+    document.addEventListener('keydown', (e) => {
+      if (e.key === 'Escape' && apiKeyModal.classList.contains('active')) {
+        closeApiKeyModal();
+      }
+      if (e.key === 'Enter' && apiKeyModal.classList.contains('active') && document.activeElement === apiKeyInput) {
+        saveApiKey();
+      }
+    });
+
+    // Close modal on overlay click
+    settingsModal.addEventListener('click', (e) => {
+      if (e.target === settingsModal) {
+        closeSettingsModal();
+      }
+    });
+
+    // Close modal on Escape key
+    document.addEventListener('keydown', (e) => {
+      if (e.key === 'Escape' && settingsModal.classList.contains('active')) {
+        closeSettingsModal();
+      }
+    });
+
+    // Initialize
+    initGameCards();
+  </script>
+</body>
+</html>
+

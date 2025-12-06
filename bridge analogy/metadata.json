@@ -1,0 +1,5 @@
+{
+  "name": "Bridge the Worlds: Analogy Trainer",
+  "description": "A cognitive training game to enhance relational abstraction skills. Players create far analogies which are then scored by an AI judge on relational match, domain distance, and coherence.",
+  "requestFramePermissions": []
+}

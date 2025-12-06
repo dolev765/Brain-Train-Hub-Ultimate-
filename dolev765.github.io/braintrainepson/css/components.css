@@ -1,0 +1,288 @@
+/* Components CSS - Buttons, forms, and interactive elements */
+
+/* Button Styles */
+.btn {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: 8px;
+    padding: 12px 24px;
+    border: none;
+    border-radius: 8px;
+    font-family: "Inter", sans-serif;
+    font-size: 16px;
+    font-weight: 600;
+    text-decoration: none;
+    cursor: pointer;
+    transition: all 0.2s ease;
+    min-height: 44px;
+    position: relative;
+    overflow: hidden;
+}
+
+.btn:disabled {
+    opacity: 0.6;
+    cursor: not-allowed;
+}
+
+.btn:focus {
+    outline: 2px solid #cc2929;
+    outline-offset: 2px;
+}
+
+/* Primary Button */
+.btn-primary {
+    background-color: #cc2929;
+    color: #ffffff;
+    box-shadow: 0 2px 4px rgba(204, 41, 41, 0.2);
+}
+
+.btn-primary:hover:not(:disabled) {
+    background-color: #b82424;
+    transform: translateY(-1px);
+    box-shadow: 0 4px 8px rgba(204, 41, 41, 0.3);
+}
+
+.btn-primary:active {
+    transform: translateY(0);
+    box-shadow: 0 2px 4px rgba(204, 41, 41, 0.2);
+}
+
+/* Secondary Button */
+.btn-secondary {
+    background-color: transparent;
+    color: #333333;
+    border: 2px solid #6c757d;
+}
+
+.btn-secondary:hover:not(:disabled) {
+    background-color: #f8f9fa;
+    border-color: #cc2929;
+    color: #cc2929;
+}
+
+.btn-secondary:active {
+    background-color: #e9ecef;
+}
+
+/* Mode Buttons */
+.mode-buttons {
+    display: flex;
+    gap: 1rem;
+    flex-wrap: wrap;
+}
+
+.mode-button {
+    padding: 12px 20px;
+    border: 2px solid #6c757d;
+    background-color: transparent;
+    color: #333333;
+    border-radius: 8px;
+    font-family: "Inter", sans-serif;
+    font-size: 16px;
+    font-weight: 600;
+    cursor: pointer;
+    transition: all 0.2s ease;
+    min-height: 44px;
+}
+
+.mode-button:hover {
+    background-color: #f8f9fa;
+    border-color: #cc2929;
+    color: #cc2929;
+}
+
+.mode-button.active {
+    background-color: #cc2929;
+    color: #ffffff;
+    border-color: #cc2929;
+}
+
+.mode-button.active:hover {
+    background-color: #b82424;
+}
+
+/* Level Selector */
+.level-selector {
+    display: flex;
+    gap: 0.5rem;
+    flex-wrap: wrap;
+    margin-bottom: 1rem;
+}
+
+.level-button {
+    width: 44px;
+    height: 44px;
+    border: 2px solid #6c757d;
+    background-color: transparent;
+    color: #333333;
+    border-radius: 8px;
+    font-family: "Inter", sans-serif;
+    font-size: 16px;
+    font-weight: 600;
+    cursor: pointer;
+    transition: all 0.2s ease;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.level-button:hover {
+    background-color: #f8f9fa;
+    border-color: #cc2929;
+    color: #cc2929;
+}
+
+.level-button.active {
+    background-color: #cc2929;
+    color: #ffffff;
+    border-color: #cc2929;
+}
+
+.level-button.active:hover {
+    background-color: #b82424;
+}
+
+/* Form Elements */
+select {
+    padding: 6px 10px;
+    border-radius: 6px;
+    border: 1px solid #6c757d;
+    background: #ffffff;
+    color: #333333;
+    font-family: "Inter", sans-serif;
+    font-size: 14px;
+    cursor: pointer;
+}
+
+select:focus {
+    outline: 2px solid #cc2929;
+    outline-offset: 2px;
+    border-color: #cc2929;
+}
+
+input[type="checkbox"] {
+    width: 18px;
+    height: 18px;
+    accent-color: #cc2929;
+    cursor: pointer;
+}
+
+input[type="checkbox"]:focus {
+    outline: 2px solid #cc2929;
+    outline-offset: 2px;
+}
+
+/* Loading States */
+.btn.loading {
+    position: relative;
+    color: transparent;
+}
+
+.btn.loading::after {
+    content: "";
+    position: absolute;
+    width: 16px;
+    height: 16px;
+    top: 50%;
+    left: 50%;
+    margin-left: -8px;
+    margin-top: -8px;
+    border: 2px solid transparent;
+    border-top: 2px solid currentColor;
+    border-radius: 50%;
+    animation: spin 1s linear infinite;
+}
+
+@keyframes spin {
+    0% { transform: rotate(0deg); }
+    100% { transform: rotate(360deg); }
+}
+
+/* Icon Styles */
+.btn svg {
+    min-width: 16px;
+    min-height: 16px;
+    fill: currentColor;
+}
+
+/* Button Groups */
+.button-group {
+    display: flex;
+    gap: 1rem;
+    align-items: center;
+}
+
+.button-group .btn {
+    flex: 1;
+}
+
+/* Special Button Styles */
+.btn-large {
+    padding: 16px 32px;
+    font-size: 18px;
+    min-height: 56px;
+}
+
+.btn-small {
+    padding: 8px 16px;
+    font-size: 14px;
+    min-height: 36px;
+}
+
+.btn-icon-only {
+    padding: 12px;
+    min-width: 44px;
+}
+
+.btn-icon-only svg {
+    margin: 0;
+}
+
+/* Responsive Button Adjustments */
+@media (max-width: 768px) {
+    .btn {
+        padding: 10px 20px;
+        font-size: 14px;
+        min-height: 40px;
+    }
+    
+    .mode-buttons {
+        flex-direction: column;
+    }
+    
+    .mode-button {
+        width: 100%;
+    }
+    
+    .level-selector {
+        justify-content: center;
+    }
+    
+    .action-buttons {
+        flex-direction: column;
+        align-items: stretch;
+    }
+    
+    .response-buttons {
+        flex-direction: column;
+    }
+    
+    .button-group {
+        flex-direction: column;
+    }
+}
+
+@media (max-width: 480px) {
+    .btn {
+        padding: 8px 16px;
+        font-size: 14px;
+        min-height: 36px;
+    }
+    
+    .level-button {
+        width: 36px;
+        height: 36px;
+        font-size: 14px;
+    }
+}
