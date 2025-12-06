@@ -3044,14 +3044,17 @@
       }
       
       // Use liked tags for wins, hated tags for losses
-      // Convert comma-separated tags to space-separated for API (like rule34Py)
+      // Randomly pick ONE tag from comma-separated list
       let rawTags = isPositive 
         ? (likedTags || 'cute').trim()
         : (hatedTags || 'scary').trim();
       
-      // Convert comma-separated to space-separated and encode properly
+      // Split by comma and randomly pick one tag
       const tagArray = rawTags.split(',').map(t => t.trim()).filter(t => t);
-      const tagString = tagArray.join(' ');
+      const randomTag = tagArray[Math.floor(Math.random() * tagArray.length)];
+      const tagString = randomTag;
+      
+      console.log(`Randomly picked tag "${tagString}" from [${tagArray.join(', ')}]`);
       
       if (!tagString) {
         console.warn('No tags configured for reinforcement');
