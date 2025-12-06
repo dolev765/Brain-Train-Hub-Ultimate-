@@ -2394,8 +2394,11 @@
       // Reinforcement panel
       const rf = gameSettings.reinforcement || {};
       setChecked('reinforcement-enabled', rf.enabled);
-      setVal('reinforcement-user-id', rf.userId || '');
-      setVal('reinforcement-api-key', rf.apiKey || '');
+      // Load Rule34 credentials from localStorage first, then fallback to settings
+      const savedRule34UserId = localStorage.getItem('rule34_user_id');
+      const savedRule34ApiKey = localStorage.getItem('rule34_api_key');
+      setVal('reinforcement-user-id', savedRule34UserId || rf.userId || '');
+      setVal('reinforcement-api-key', savedRule34ApiKey || rf.apiKey || '');
       setVal('reinforcement-liked-tags', rf.likedTags || '');
       setVal('reinforcement-hated-tags', rf.hatedTags || '');
       
@@ -2572,6 +2575,16 @@
       const apiKeyInput = document.getElementById('bridge-api-key');
       if (apiKeyInput && apiKeyInput.value.trim()) {
         localStorage.setItem('bridge_analogy_api_key', apiKeyInput.value.trim());
+      }
+      
+      // Save Rule34 credentials to localStorage if provided
+      const rule34UserId = getVal('reinforcement-user-id', '').trim();
+      const rule34ApiKey = getVal('reinforcement-api-key', '').trim();
+      if (rule34UserId) {
+        localStorage.setItem('rule34_user_id', rule34UserId);
+      }
+      if (rule34ApiKey) {
+        localStorage.setItem('rule34_api_key', rule34ApiKey);
       }
       
       saveSettings(gameSettings);
@@ -3413,7 +3426,10 @@
         if (apiKeyMatch) {
           const apiKeyInput = document.getElementById('reinforcement-api-key');
           if (apiKeyInput) {
-            apiKeyInput.value = apiKeyMatch[1];
+            const apiKey = apiKeyMatch[1];
+            apiKeyInput.value = apiKey;
+            // Save to localStorage
+            localStorage.setItem('rule34_api_key', apiKey);
             apiKeyInput.style.borderColor = '#00ff88';
             setTimeout(() => apiKeyInput.style.borderColor = '', 2000);
           }
@@ -3424,7 +3440,10 @@
         if (userIdMatch) {
           const userIdInput = document.getElementById('reinforcement-user-id');
           if (userIdInput) {
-            userIdInput.value = userIdMatch[1];
+            const userId = userIdMatch[1];
+            userIdInput.value = userId;
+            // Save to localStorage
+            localStorage.setItem('rule34_user_id', userId);
             userIdInput.style.borderColor = '#00ff88';
             setTimeout(() => userIdInput.style.borderColor = '', 2000);
           }
