@@ -3034,10 +3034,12 @@
       return posts;
     }
     
-    // CORS proxies to try in order
+    // CORS proxies to try in order (some may block NSFW content)
     const CORS_PROXIES = [
+      // These proxies are more permissive
       (url) => `https://corsproxy.io/?${encodeURIComponent(url)}`,
       (url) => `https://api.allorigins.win/raw?url=${encodeURIComponent(url)}`,
+      (url) => `https://thingproxy.freeboard.io/fetch/${url}`,
       (url) => `https://api.codetabs.com/v1/proxy?quest=${encodeURIComponent(url)}`
     ];
     
@@ -3078,29 +3080,41 @@
       
       try {
         // Build API URL matching rule34Py format
-        const params = new URLSearchParams();
-        params.set('page', 'dapi');
-        params.set('s', 'post');
-        params.set('q', 'index');
-        params.set('tags', tagString);
-        params.set('limit', '100');  // Get more results for variety
-        params.set('pid', Math.floor(Math.random() * 10).toString()); // Random page 0-9
-        params.set('json', '1');
+        // Try without json=1 first (XML response) which may work better with proxies
+        const paramsXML = new URLSearchParams();
+        paramsXML.set('page', 'dapi');
+        paramsXML.set('s', 'post');
+        paramsXML.set('q', 'index');
+        paramsXML.set('tags', tagString);
+        paramsXML.set('limit', '50');
+        paramsXML.set('pid', Math.floor(Math.random() * 5).toString());
         
-        // Add API credentials if provided (like rule34Py client.api_key and client.user_id)
+        const paramsJSON = new URLSearchParams();
+        paramsJSON.set('page', 'dapi');
+        paramsJSON.set('s', 'post');
+        paramsJSON.set('q', 'index');
+        paramsJSON.set('tags', tagString);
+        paramsJSON.set('limit', '50');
+        paramsJSON.set('pid', Math.floor(Math.random() * 5).toString());
+        paramsJSON.set('json', '1');
+        
+        // Add API credentials if provided
         if (userId && apiKey) {
-          params.set('api_key', apiKey);
-          params.set('user_id', userId);
+          paramsXML.set('api_key', apiKey);
+          paramsXML.set('user_id', userId);
+          paramsJSON.set('api_key', apiKey);
+          paramsJSON.set('user_id', userId);
           console.log('Using API credentials for Rule34');
         }
         
-        // Try rule34.xxx first (may work without auth), then api.rule34.xxx
+        // Try multiple endpoint/format combinations
         const endpoints = [
-          `https://rule34.xxx/index.php?${params.toString()}`,
-          `https://api.rule34.xxx/index.php?${params.toString()}`
+          `https://rule34.xxx/index.php?${paramsXML.toString()}`,  // XML without auth endpoint
+          `https://rule34.xxx/index.php?${paramsJSON.toString()}`, // JSON without auth endpoint
+          `https://api.rule34.xxx/index.php?${paramsJSON.toString()}` // JSON with auth endpoint
         ];
         
-        console.log('Will try endpoints:', endpoints);
+        console.log('Will try', endpoints.length, 'endpoints');
         
         let data = null;
         let lastError = null;

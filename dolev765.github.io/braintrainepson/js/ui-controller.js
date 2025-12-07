@@ -261,6 +261,12 @@ export class UIController {
     const historyElement = document.createElement('div');
     historyElement.className = `history-item ${historyItem.isCorrect ? 'correct' : 'incorrect'}`;
     
+    // Handle null pair gracefully
+    if (!historyItem.pair) {
+      console.warn('History item has null pair, skipping display');
+      return;
+    }
+    
     const ruleText = historyItem.rule === 1 ? 'Physical Property' : 'Meaning';
     const correctAnswer = historyItem.rule === 1 ? 
       (historyItem.pair.sameFormat ? 'Same format (J)' : 'Different format (F)') :

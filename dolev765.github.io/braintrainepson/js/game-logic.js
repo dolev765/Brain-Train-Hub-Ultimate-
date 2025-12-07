@@ -97,6 +97,9 @@ export class GameLogic {
   generateStimulus() {
     const pair = stimulusGenerator.generateStimulus();
     
+    // IMPORTANT: Store the current pair in game state so handleResponse can access it
+    gameState.currentPair = pair;
+    
     // Mark the trial as used now that it's being presented
     gameState.markTrialAsUsed();
     
